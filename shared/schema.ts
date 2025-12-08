@@ -1075,7 +1075,7 @@ export interface BatchConfigSettings {
   yPositionIncrement: number;
   xPositionStartValue: number; // Start value for X position
   yPositionStartValue: number; // Start value for Y position
-  xPositionModulationMode: 'off' | 'grid-row' | 'pixel-value' | 'shape-count'; // Modulation mode for X position
+  xPositionModulationMode: 'off' | 'grid-col' | 'pixel-value' | 'shape-count'; // Modulation mode for X position (grid-col resets at each column)
   xPositionModulationValue: number; // Modulation value for X position (used for pixel-value and shape-count modes)
   yPositionModulationMode: 'off' | 'grid-row' | 'pixel-value' | 'shape-count'; // Modulation mode for Y position
   yPositionModulationValue: number; // Modulation value for Y position (used for pixel-value and shape-count modes)
@@ -1547,7 +1547,8 @@ export interface BatchConfigSettings {
   transformOriginYIncrement: number;
   transformOriginYModulationEnabled: boolean;
   transformOriginYModulationValue: number;
-  transformOriginIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for transform origin incremental mode
+  transformOriginXIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for transform origin X incremental mode
+  transformOriginYIncrementalIndexDriver: IncrementalIndexDriver; // Index driver for transform origin Y incremental mode
   
   // Predefined anchor points (for predefined-artboard and current-shape modes)
   transformOriginPredefined: 'center' | 'top-left' | 'top-center' | 'top-right' | 'center-left' | 'center-right' | 'bottom-left' | 'bottom-center' | 'bottom-right';
@@ -2232,7 +2233,8 @@ export const defaultBatchConfigSettings: BatchConfigSettings = {
   transformOriginYIncrement: 10,
   transformOriginYModulationEnabled: false,
   transformOriginYModulationValue: 100,
-  transformOriginIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for transform origin incremental
+  transformOriginXIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for transform origin X incremental
+  transformOriginYIncrementalIndexDriver: 'shapeIndex', // Default: use shape index for transform origin Y incremental
   
   // Predefined anchor points
   transformOriginPredefined: 'center',
@@ -2993,7 +2995,7 @@ export const BatchConfigSettingsSchema = z.object({
   yPositionIncrement: z.number(),
   xPositionStartValue: z.number(),
   yPositionStartValue: z.number(),
-  xPositionModulationMode: z.enum(['off', 'grid-row', 'pixel-value', 'shape-count']),
+  xPositionModulationMode: z.enum(['off', 'grid-col', 'pixel-value', 'shape-count']),
   xPositionModulationValue: z.number(),
   yPositionModulationMode: z.enum(['off', 'grid-row', 'pixel-value', 'shape-count']),
   yPositionModulationValue: z.number(),
@@ -3434,7 +3436,8 @@ export const BatchConfigSettingsSchema = z.object({
   transformOriginYIncrement: z.number(),
   transformOriginYModulationEnabled: z.boolean(),
   transformOriginYModulationValue: z.number(),
-  transformOriginIncrementalIndexDriver: IncrementalIndexDriverSchema,
+  transformOriginXIncrementalIndexDriver: IncrementalIndexDriverSchema,
+  transformOriginYIncrementalIndexDriver: IncrementalIndexDriverSchema,
   
   // Predefined anchor points
   transformOriginPredefined: z.enum(['center', 'top-left', 'top-center', 'top-right', 'center-left', 'center-right', 'bottom-left', 'bottom-center', 'bottom-right']),

@@ -2852,6 +2852,30 @@ function BatchConfigDialogInner({
                                     />
                                     <Label className="text-xs text-slate-400">Reset per batch</Label>
                                   </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.widthModulationEnabled ?? false}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ widthModulationEnabled: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                      data-testid="checkbox-width-modulation"
+                                    />
+                                    <Label className="text-xs text-slate-400">Enable Modulation</Label>
+                                  </div>
+                                  {currentSettings.widthModulationEnabled && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Wrap at (px)</Label>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.widthModulationValue ?? 500}
+                                        onValueCommit={(value) => handleSettingsUpdate({ widthModulationValue: value })}
+                                        min={10}
+                                        max={1000}
+                                        step={10}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
+                                    </div>
+                                  )}
                                   <IndexDriverSelect
                                     value={currentSettings.sizeIncrementalIndexDriver}
                                     onChange={(value) => handleSettingsUpdate({ sizeIncrementalIndexDriver: value })}
@@ -2980,6 +3004,30 @@ function BatchConfigDialogInner({
                                     />
                                     <Label className="text-xs text-slate-400">Reset per batch</Label>
                                   </div>
+                                  <div className="flex items-center space-x-2">
+                                    <Checkbox
+                                      checked={currentSettings.heightModulationEnabled ?? false}
+                                      onCheckedChange={(checked) => handleSettingsUpdate({ heightModulationEnabled: checked as boolean })}
+                                      className="border-slate-500 data-[state=checked]:bg-blue-600"
+                                      data-testid="checkbox-height-modulation"
+                                    />
+                                    <Label className="text-xs text-slate-400">Enable Modulation</Label>
+                                  </div>
+                                  {currentSettings.heightModulationEnabled && (
+                                    <div className="space-y-1">
+                                      <Label className="text-xs text-slate-400">Wrap at (px)</Label>
+                                      <BufferedSliderWithNumericInput
+                                        value={currentSettings.heightModulationValue ?? 500}
+                                        onValueCommit={(value) => handleSettingsUpdate({ heightModulationValue: value })}
+                                        min={10}
+                                        max={1000}
+                                        step={10}
+                                        layout="inline"
+                                        inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                        sliderClassName="flex-1 [&_[role=slider]]:bg-blue-600"
+                                      />
+                                    </div>
+                                  )}
                                   <IndexDriverSelect
                                     value={currentSettings.sizeIncrementalIndexDriver}
                                     onChange={(value) => handleSettingsUpdate({ sizeIncrementalIndexDriver: value })}
@@ -3219,7 +3267,7 @@ function BatchConfigDialogInner({
                                         <SelectItem value="off" className="text-slate-200 hover:bg-slate-700">No Modulation</SelectItem>
                                         <SelectItem value="pixel-value" className="text-slate-200 hover:bg-slate-700">Pixel Value</SelectItem>
                                         <SelectItem value="shape-count" className="text-slate-200 hover:bg-slate-700">Shape Count</SelectItem>
-                                        <SelectItem value="grid-row" className="text-slate-200 hover:bg-slate-700">Grid Row</SelectItem>
+                                        <SelectItem value="grid-col" className="text-slate-200 hover:bg-slate-700">Grid Col</SelectItem>
                                       </SelectContent>
                                     </Select>
                                   </div>
@@ -4930,7 +4978,7 @@ function BatchConfigDialogInner({
                                                       <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
                                                         <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
                                                         <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                                        <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incr</SelectItem>
+                                                        <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                                                       </SelectContent>
                                                     </Select>
                                                   </div>
@@ -5012,13 +5060,13 @@ function BatchConfigDialogInner({
                                                           className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                                         />
                                                       </div>
-                                                      <div className="flex items-center gap-1">
+                                                      <div className="flex items-center gap-2">
                                                         <Checkbox
                                                           checked={currentSettings.fillGradientConicCenterXModulationEnabled ?? false}
                                                           onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicCenterXModulationEnabled: checked as boolean })}
-                                                          className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                                          className="border-slate-500 data-[state=checked]:bg-amber-600"
                                                         />
-                                                        <Label className="text-xs text-slate-400">Mod</Label>
+                                                        <Label className="text-xs text-slate-300">Modulation</Label>
                                                         {currentSettings.fillGradientConicCenterXModulationEnabled && (
                                                           <NumericInput
                                                             value={currentSettings.fillGradientConicCenterXModulationValue ?? 100}
@@ -5053,7 +5101,7 @@ function BatchConfigDialogInner({
                                                       <SelectContent className="bg-slate-800 border-slate-600" style={{ zIndex: 10003 }}>
                                                         <SelectItem value="fixed" className="text-slate-200 hover:bg-slate-700">Fixed</SelectItem>
                                                         <SelectItem value="range" className="text-slate-200 hover:bg-slate-700">Range</SelectItem>
-                                                        <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incr</SelectItem>
+                                                        <SelectItem value="incremental" className="text-slate-200 hover:bg-slate-700">Incremental</SelectItem>
                                                       </SelectContent>
                                                     </Select>
                                                   </div>
@@ -5135,13 +5183,13 @@ function BatchConfigDialogInner({
                                                           className="h-8 flex-1 bg-slate-800 border-slate-600 text-slate-200 text-xs px-1"
                                                         />
                                                       </div>
-                                                      <div className="flex items-center gap-1">
+                                                      <div className="flex items-center gap-2">
                                                         <Checkbox
                                                           checked={currentSettings.fillGradientConicCenterYModulationEnabled ?? false}
                                                           onCheckedChange={(checked) => handleSettingsUpdate({ fillGradientConicCenterYModulationEnabled: checked as boolean })}
-                                                          className="border-slate-500 data-[state=checked]:bg-amber-600 h-3 w-3"
+                                                          className="border-slate-500 data-[state=checked]:bg-amber-600"
                                                         />
-                                                        <Label className="text-xs text-slate-400">Mod</Label>
+                                                        <Label className="text-xs text-slate-300">Modulation</Label>
                                                         {currentSettings.fillGradientConicCenterYModulationEnabled && (
                                                           <NumericInput
                                                             value={currentSettings.fillGradientConicCenterYModulationValue ?? 100}
@@ -6809,6 +6857,40 @@ function BatchConfigDialogInner({
                                   sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
                                 />
                               </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={currentSettings.scaleXModulationEnabled ?? false}
+                                  onCheckedChange={(checked) => {
+                                    handleSettingsUpdate({ scaleXModulationEnabled: checked as boolean });
+                                    if (currentSettings.maintainScaleAspectRatio) {
+                                      handleSettingsUpdate({ scaleYModulationEnabled: checked as boolean });
+                                    }
+                                  }}
+                                  className="border-slate-500 data-[state=checked]:bg-green-600"
+                                  data-testid="checkbox-scale-x-modulation"
+                                />
+                                <Label className="text-xs text-slate-400">Enable Modulation</Label>
+                              </div>
+                              {currentSettings.scaleXModulationEnabled && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Wrap at (%)</Label>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.scaleXModulationValue ?? 100}
+                                    onValueCommit={(value) => {
+                                      handleSettingsUpdate({ scaleXModulationValue: value });
+                                      if (currentSettings.maintainScaleAspectRatio) {
+                                        handleSettingsUpdate({ scaleYModulationValue: value });
+                                      }
+                                    }}
+                                    min={10}
+                                    max={500}
+                                    step={10}
+                                    layout="inline"
+                                    inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                  />
+                                </div>
+                              )}
                               <IndexDriverSelect
                                 value={currentSettings.setTransformIncrementalIndexDriver}
                                 onChange={(value) => handleSettingsUpdate({ setTransformIncrementalIndexDriver: value })}
@@ -6959,6 +7041,37 @@ function BatchConfigDialogInner({
                                   disabled={currentSettings.maintainScaleAspectRatio}
                                 />
                               </div>
+                              <div className="flex items-center space-x-2">
+                                <Checkbox
+                                  checked={currentSettings.scaleYModulationEnabled ?? false}
+                                  onCheckedChange={(checked) => handleSettingsUpdate({ scaleYModulationEnabled: checked as boolean })}
+                                  className="border-slate-500 data-[state=checked]:bg-green-600"
+                                  disabled={currentSettings.maintainScaleAspectRatio}
+                                  data-testid="checkbox-scale-y-modulation"
+                                />
+                                <Label className="text-xs text-slate-400">Enable Modulation</Label>
+                              </div>
+                              {currentSettings.scaleYModulationEnabled && (
+                                <div className="space-y-1">
+                                  <Label className="text-xs text-slate-400">Wrap at (%)</Label>
+                                  <BufferedSliderWithNumericInput
+                                    value={currentSettings.scaleYModulationValue ?? 100}
+                                    onValueCommit={(value) => handleSettingsUpdate({ scaleYModulationValue: value })}
+                                    min={10}
+                                    max={500}
+                                    step={10}
+                                    layout="inline"
+                                    inputClassName="h-8 w-16 bg-slate-800 border-slate-600 text-slate-200"
+                                    sliderClassName="flex-1 [&_[role=slider]]:bg-green-600"
+                                    disabled={currentSettings.maintainScaleAspectRatio}
+                                  />
+                                </div>
+                              )}
+                              <IndexDriverSelect
+                                value={currentSettings.setTransformIncrementalIndexDriver}
+                                onChange={(value) => handleSettingsUpdate({ setTransformIncrementalIndexDriver: value })}
+                                testId="select-scale-y-index-driver"
+                              />
                             </div>
                           )}
                         </div>
@@ -7491,6 +7604,11 @@ function BatchConfigDialogInner({
                                       </div>
                                     </div>
                                   )}
+                                  <IndexDriverSelect
+                                    value={currentSettings.transformOriginXIncrementalIndexDriver}
+                                    onChange={(value) => handleSettingsUpdate({ transformOriginXIncrementalIndexDriver: value })}
+                                    testId="select-transform-origin-x-index-driver"
+                                  />
                                 </div>
                               </div>
                               
@@ -7575,13 +7693,13 @@ function BatchConfigDialogInner({
                                       </div>
                                     </div>
                                   )}
+                                  <IndexDriverSelect
+                                    value={currentSettings.transformOriginYIncrementalIndexDriver}
+                                    onChange={(value) => handleSettingsUpdate({ transformOriginYIncrementalIndexDriver: value })}
+                                    testId="select-transform-origin-y-index-driver"
+                                  />
                                 </div>
                               </div>
-                              <IndexDriverSelect
-                                value={currentSettings.transformOriginIncrementalIndexDriver}
-                                onChange={(value) => handleSettingsUpdate({ transformOriginIncrementalIndexDriver: value })}
-                                testId="select-transform-origin-index-driver"
-                              />
                             </div>
                           )}
                         </div>

@@ -39,6 +39,13 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: Replit OpenID Connect integration with PostgreSQL-backed session storage.
 - **Transform Origin System**: Comprehensive controls with Fixed, Range, Incremental modes, predefined anchoring, and shape referencing, with client/server parity.
 - **Enhanced Incremental Transform Modes**: Position (X/Y) and Rotation transforms support incremental mode with start value, increment, and modulation.
+- **Incremental Mode System**: Comprehensive 3-layer control for progressive property values:
+  - **Layer 1 - Base Calculation**: Start Value + (Increment × Index) = base incremental value
+  - **Layer 2 - Modulation (Optional)**: Wraps incremental values at specified threshold using modulo operation, enables repeating patterns
+  - **Layer 3 - Index Driver**: Selects which index drives the calculation (shapeIndex for individual shapes, setRepIndex for set repetitions)
+  - **Properties Supporting Incremental Mode**: Position X/Y (with separate grid modulation modes), Rotation, Scale X/Y, Width, Height, Transform Origin X/Y, Fill Opacity, Gradient angles
+  - **Grid Modulation**: X Position uses 'grid-col' (column-based wrapping), Y Position uses 'grid-row' (row-based wrapping) for grid-aware patterns
+  - **Separate Axis Controls**: Position X/Y and Transform Origin X/Y have independent Index Drivers and modulation settings per axis
 - **Position Alignment System**: Dual anchor point alignment for precise shape positioning.
 - **Canvas-Based Blur System**: Gaussian blur via direct canvas pixel manipulation.
 - **Enhanced Curve System**: Mathematically accurate Bézier curves and cubic splines.

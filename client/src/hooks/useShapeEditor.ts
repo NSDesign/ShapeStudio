@@ -1576,8 +1576,9 @@ export const useShapeEditor = () => {
     } else if (modulationMode === 'shape-count' && modulationValue > 0) {
       const moduloIndex = effectiveIndex % modulationValue;
       value = startValue + (moduloIndex * increment);
-    } else if (modulationMode === 'grid-row' && modulationValue > 0 && gridColumnIndex !== undefined) {
-      // Grid-row mode: modulate based on column position within the row
+    } else if ((modulationMode === 'grid-col' || modulationMode === 'grid-row') && modulationValue > 0 && gridColumnIndex !== undefined) {
+      // Grid-col/grid-row mode: modulate based on grid position
+      // Note: gridColumnIndex is the generic grid cell index - could be column for X or row for Y
       const moduloIndex = gridColumnIndex % modulationValue;
       value = startValue + (moduloIndex * increment);
     }
@@ -1620,7 +1621,7 @@ export const useShapeEditor = () => {
           const moduloIndex = adjustedIndex % settings.xPositionModulationValue;
           value = settings.xPositionStartValue + (moduloIndex * settings.xPositionIncrement);
         }
-        // Note: grid-row mode will be implemented in later task when refactoring to use grid cell index
+        // Note: grid-col mode will be implemented in later task when refactoring to use grid cell index
         
         return value;
 
@@ -2898,17 +2899,19 @@ export const useShapeEditor = () => {
               originY = yMin + Math.random() * (yMax - yMin);
             } else if (defineMode === 'incremental') {
               // Incremental mode: start + increment * index + modulation
-              // Use Index Driver to select which index to use for incremental calculation
-              const originDriver = effectiveBatchConfig.transformOriginIncrementalIndexDriver || 'shapeIndex';
-              const effectiveOriginIndex = originDriver === 'setRepIndex' ? setRepIndex : index;
+              // Use separate Index Drivers for X and Y axes
+              const xOriginDriver = effectiveBatchConfig.transformOriginXIncrementalIndexDriver || 'shapeIndex';
+              const yOriginDriver = effectiveBatchConfig.transformOriginYIncrementalIndexDriver || 'shapeIndex';
+              const effectiveXOriginIndex = xOriginDriver === 'setRepIndex' ? setRepIndex : index;
+              const effectiveYOriginIndex = yOriginDriver === 'setRepIndex' ? setRepIndex : index;
               
               const xStart = effectiveBatchConfig.transformOriginXStartValue ?? 0;
               const xIncrement = effectiveBatchConfig.transformOriginXIncrement ?? 10;
               const yStart = effectiveBatchConfig.transformOriginYStartValue ?? 0;
               const yIncrement = effectiveBatchConfig.transformOriginYIncrement ?? 10;
               
-              let xIncrementAmount = xIncrement * effectiveOriginIndex;
-              let yIncrementAmount = yIncrement * effectiveOriginIndex;
+              let xIncrementAmount = xIncrement * effectiveXOriginIndex;
+              let yIncrementAmount = yIncrement * effectiveYOriginIndex;
               
               // Apply modulation if enabled
               if (effectiveBatchConfig.transformOriginXModulationEnabled && effectiveBatchConfig.transformOriginXModulationValue > 0) {
@@ -2922,7 +2925,7 @@ export const useShapeEditor = () => {
               
               originX = xStart + xIncrementAmount;
               originY = yStart + yIncrementAmount;
-              console.log(`🎯 [TRANSFORM ORIGIN INCREMENTAL] Shape ${index} (driver=${originDriver}, idx=${effectiveOriginIndex}): origin=(${originX}, ${originY})`);
+              console.log(`🎯 [TRANSFORM ORIGIN INCREMENTAL] Shape ${index} (xDriver=${xOriginDriver}, xIdx=${effectiveXOriginIndex}, yDriver=${yOriginDriver}, yIdx=${effectiveYOriginIndex}): origin=(${originX}, ${originY})`);
             }
           } else if (effectiveBatchConfig.transformOriginMode === 'predefined-artboard') {
             // Use predefined artboard alignment points
