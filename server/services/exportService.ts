@@ -2795,6 +2795,17 @@ export class HighResolutionExportService {
     // Collect tile buffers for compositing
     const compositeInputs: Array<{ input: Buffer; left: number; top: number }> = [];
     
+    // Set up console listener ONCE before the loop (not inside)
+    const setupConsoleListener = (pg: any) => {
+      pg.on('console', (msg: any) => {
+        const text = msg.text();
+        if (text.includes('TILE_RENDER') || text.includes('TILE DEBUG')) {
+          console.log(`[Puppeteer Console] ${text}`);
+        }
+      });
+    };
+    setupConsoleListener(currentPage);
+    
     // Phase 2: Render each tile
     for (const tile of tilePlan.tiles) {
       // Check for abort
@@ -2829,6 +2840,7 @@ export class HighResolutionExportService {
         }
         
         currentPage = await this.browser.newPage();
+        setupConsoleListener(currentPage);
         console.log('[HighResExport] Created fresh page for remaining tiles');
       }
       
@@ -2867,13 +2879,12 @@ export class HighResolutionExportService {
       
       const tileHtml = this.generateTileRendererHtml(tileRenderData);
       
-      // DEBUG: Log first tile HTML snippet to verify content
+      // DEBUG: Log HTML offset values for ALL tiles to verify correct generation
+      const tileOffsetMatch = tileHtml.match(/TILE_OFFSET_X = (\d+)/);
+      const tileOffsetYMatch = tileHtml.match(/TILE_OFFSET_Y = (\d+)/);
+      console.log(`[HighResExport] Tile ${tile.index + 1} HTML contains: TILE_OFFSET_X=${tileOffsetMatch?.[1] || 'NOT_FOUND'}, TILE_OFFSET_Y=${tileOffsetYMatch?.[1] || 'NOT_FOUND'}`);
       if (tile.index === 0) {
-        // Check if TILE_OFFSET values are in the HTML
-        const tileOffsetMatch = tileHtml.match(/TILE_OFFSET_X = (\d+)/);
-        const tileOffsetYMatch = tileHtml.match(/TILE_OFFSET_Y = (\d+)/);
-        console.log(`[HighResExport] Tile 1 HTML contains: TILE_OFFSET_X=${tileOffsetMatch?.[1] || 'NOT_FOUND'}, TILE_OFFSET_Y=${tileOffsetYMatch?.[1] || 'NOT_FOUND'}`);
-        // Also check for our debug marker
+        // Also check for our debug marker on first tile
         const hasDebugMarker = tileHtml.includes('TILE_RENDER_V2');
         console.log(`[HighResExport] Tile 1 HTML has TILE_RENDER_V2 marker: ${hasDebugMarker}`);
       }
@@ -2884,13 +2895,9 @@ export class HighResolutionExportService {
         deviceScaleFactor: 1
       });
       
-      // Capture browser console logs
-      currentPage.on('console', (msg) => {
-        const text = msg.text();
-        if (text.includes('TILE_RENDER') || text.includes('TILE DEBUG')) {
-          console.log(`[Puppeteer Console] ${text}`);
-        }
-      });
+      // CRITICAL: Navigate to about:blank BEFORE setContent to force a clean JavaScript state
+      // This prevents the previous tile's JavaScript from persisting due to Puppeteer/Chromium caching
+      await currentPage.goto('about:blank', { waitUntil: 'domcontentloaded' });
       
       await currentPage.setContent(tileHtml, { waitUntil: 'networkidle0' });
       
