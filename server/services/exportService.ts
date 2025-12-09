@@ -3220,12 +3220,16 @@ export class HighResolutionExportService {
         }
         
         // Apply transforms in correct order:
-        // 1. Translate by negative tile offset (shift the full canvas so this tile portion is visible)
-        // 2. Scale by DPI scale (calculated from canvas/artboard ratio)
-        // 3. Translate by print expansion (for bleed/print marks in artboard coords)
-        ctx.translate(-TILE_OFFSET_X, -TILE_OFFSET_Y);
+        // 1. Scale by DPI scale (calculated from canvas/artboard ratio)
+        // 2. Translate by print expansion (for bleed in artboard coords)
+        // 3. Translate by negative tile offset IN ARTBOARD COORDS (divide by scale)
+        //    This ensures the offset is in artboard units before scaling, so after
+        //    the CTM multiplication, we get the correct pixel offset.
+        //    Note: Canvas transforms are applied in reverse order to drawn points,
+        //    so the final point transform is: point -> (point + printExpansion - tileOffset/scale) * scale
         ctx.scale(scale, scale);
         ctx.translate(printExpansion, printExpansion);
+        ctx.translate(-TILE_OFFSET_X / scale, -TILE_OFFSET_Y / scale);
         
         const shapes = RENDER_DATA.shapes || [];
         
