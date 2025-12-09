@@ -3236,16 +3236,20 @@ export class HighResolutionExportService {
         // Matrix form: point_pixel = point_artboard * scale + (printExpansion * scale - tileOffset)
         const translateX = printExpansion * scale - TILE_OFFSET_X;
         const translateY = printExpansion * scale - TILE_OFFSET_Y;
+        
+        // UNIQUE MARKER: This proves the new setTransform code is running (v2)
+        console.log('TILE_RENDER_V2: tileIndex=' + RENDER_DATA.tileIndex + ', translateX=' + translateX + ', translateY=' + translateY + ', TILE_OFFSET_X=' + TILE_OFFSET_X + ', TILE_OFFSET_Y=' + TILE_OFFSET_Y);
+        
         ctx.setTransform(scale, 0, 0, scale, translateX, translateY);
         
-        // DEBUG: Draw tile number in top-left corner (in screen pixels, so reset transform temporarily)
+        // DEBUG: Draw tile number with LARGE RED background to make it obvious
         ctx.save();
         ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset to identity
+        ctx.fillStyle = 'red';
+        ctx.fillRect(0, 0, 300, 100);
         ctx.fillStyle = 'white';
-        ctx.fillRect(10, 10, 120, 50);
-        ctx.fillStyle = 'black';
-        ctx.font = 'bold 36px Arial';
-        ctx.fillText('Tile ' + RENDER_DATA.tileIndex, 20, 48);
+        ctx.font = 'bold 60px Arial';
+        ctx.fillText('TILE ' + RENDER_DATA.tileIndex, 20, 70);
         ctx.restore();
         // Restore the render transform
         ctx.setTransform(scale, 0, 0, scale, translateX, translateY);
