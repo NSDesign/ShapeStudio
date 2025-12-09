@@ -2860,7 +2860,9 @@ export class HighResolutionExportService {
         tileOffsetX: tile.x,
         tileOffsetY: tile.y,
         fullCanvasWidth: canvasWidth,
-        fullCanvasHeight: canvasHeight
+        fullCanvasHeight: canvasHeight,
+        // For debug labeling
+        tileIndex: tile.index + 1
       };
       
       const tileHtml = this.generateTileRendererHtml(tileRenderData);
@@ -2981,7 +2983,7 @@ export class HighResolutionExportService {
    * Uses the same rendering logic as generateRendererHtml but with tile offset support
    */
   private generateTileRendererHtml(data: any): string {
-    const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, tileOffsetX, tileOffsetY, fullCanvasWidth, fullCanvasHeight } = data;
+    const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, tileOffsetX, tileOffsetY, fullCanvasWidth, fullCanvasHeight, tileIndex } = data;
     const { bleedPx, printMarksGutterPx, printExpansion, backgroundColor } = exportSettings;
     
     // Add tile offset to the render data for translation
@@ -2990,7 +2992,8 @@ export class HighResolutionExportService {
       tileOffsetX,
       tileOffsetY,
       fullCanvasWidth,
-      fullCanvasHeight
+      fullCanvasHeight,
+      tileIndex: tileIndex || 1
     };
     
     return `<!DOCTYPE html>
@@ -3219,17 +3222,33 @@ export class HighResolutionExportService {
           ctx.fillRect(0, 0, ${canvasWidth}, ${canvasHeight});
         }
         
-        // Apply transforms in correct order:
-        // 1. Scale by DPI scale (calculated from canvas/artboard ratio)
-        // 2. Translate by print expansion (for bleed in artboard coords)
-        // 3. Translate by negative tile offset IN ARTBOARD COORDS (divide by scale)
-        //    This ensures the offset is in artboard units before scaling, so after
-        //    the CTM multiplication, we get the correct pixel offset.
-        //    Note: Canvas transforms are applied in reverse order to drawn points,
-        //    so the final point transform is: point -> (point + printExpansion - tileOffset/scale) * scale
-        ctx.scale(scale, scale);
-        ctx.translate(printExpansion, printExpansion);
-        ctx.translate(-TILE_OFFSET_X / scale, -TILE_OFFSET_Y / scale);
+        // Use setTransform to set up the complete transformation matrix in one call.
+        // The matrix is: [a, b, c, d, e, f] where:
+        //   a = horizontal scale, d = vertical scale
+        //   e = horizontal translation, f = vertical translation
+        // 
+        // For tiled rendering, each tile needs to:
+        // 1. Scale artboard coords to final pixels (by 'scale' factor)
+        // 2. Offset for print expansion (bleed area) - this is in artboard coords, so multiply by scale
+        // 3. Offset for tile position - TILE_OFFSET is already in final pixels, so subtract directly
+        //
+        // Final transform: point_pixel = (artboard_point + printExpansion) * scale - tileOffset
+        // Matrix form: point_pixel = point_artboard * scale + (printExpansion * scale - tileOffset)
+        const translateX = printExpansion * scale - TILE_OFFSET_X;
+        const translateY = printExpansion * scale - TILE_OFFSET_Y;
+        ctx.setTransform(scale, 0, 0, scale, translateX, translateY);
+        
+        // DEBUG: Draw tile number in top-left corner (in screen pixels, so reset transform temporarily)
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset to identity
+        ctx.fillStyle = 'white';
+        ctx.fillRect(10, 10, 120, 50);
+        ctx.fillStyle = 'black';
+        ctx.font = 'bold 36px Arial';
+        ctx.fillText('Tile ' + RENDER_DATA.tileIndex, 20, 48);
+        ctx.restore();
+        // Restore the render transform
+        ctx.setTransform(scale, 0, 0, scale, translateX, translateY);
         
         const shapes = RENDER_DATA.shapes || [];
         
