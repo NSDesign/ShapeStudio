@@ -2639,11 +2639,16 @@ export class HighResolutionExportService {
     // Single-pass rendering for smaller images
     progressCallback?.('Rendering image...', 1, 3);
     
+    // CRITICAL: Zero out artboard.x and artboard.y for export rendering
+    // These contain viewport positions from the interactive canvas (like -1753)
+    // which would incorrectly offset shapes when subtracted in renderShape()
     const renderData = {
       shapes,
       groups,
       artboard: {
         ...artboard,
+        x: 0,  // Zero out viewport position - shapes are already in absolute coords
+        y: 0,  // Zero out viewport position - shapes are already in absolute coords
         printConfig: artboard.printConfig
       },
       exportSettings: {
@@ -2834,11 +2839,16 @@ export class HighResolutionExportService {
       console.log(`[HighResExport] Rendering tile ${tile.index + 1}/${tilePlan.totalTiles} at (${tile.x}, ${tile.y}) size ${tile.width}x${tile.height}`);
       
       // Generate HTML for this tile with offset translation
+      // CRITICAL: Zero out artboard.x and artboard.y for tile rendering
+      // These contain viewport positions from the interactive canvas (like -1753)
+      // which would incorrectly offset shapes when subtracted in renderShape()
       const tileRenderData = {
         shapes,
         groups,
         artboard: {
           ...artboard,
+          x: 0,  // Zero out viewport position - shapes are already in absolute coords
+          y: 0,  // Zero out viewport position - shapes are already in absolute coords
           printConfig: artboard.printConfig
         },
         exportSettings: {
