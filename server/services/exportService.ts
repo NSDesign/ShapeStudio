@@ -3013,9 +3013,13 @@ export class HighResolutionExportService {
     const { shapes, groups, artboard, exportSettings, canvasWidth, canvasHeight, scale, tileOffsetX, tileOffsetY, fullCanvasWidth, fullCanvasHeight, tileIndex } = data;
     const { bleedPx, printMarksGutterPx, printExpansion, backgroundColor } = exportSettings;
     
+    // Extend artboard-filling shapes to cover bleed area
+    const bleedAdjustedShapes = printExpansion > 0 ? this.extendArtboardFillingShapes(shapes, artboard, printExpansion) : shapes;
+    
     // Add tile offset to the render data for translation
     const tileData = {
       ...data,
+      shapes: bleedAdjustedShapes,
       tileOffsetX,
       tileOffsetY,
       fullCanvasWidth,
@@ -3765,6 +3769,80 @@ export class HighResolutionExportService {
       estimatedSize,
       dimensions: { width, height }
     };
+  }
+  
+  /**
+   * Extend shapes that fill the artboard to also cover the bleed area
+   * This ensures background shapes don't leave a visible border in the bleed zone
+   */
+  private extendArtboardFillingShapes(shapes: any[], artboard: any, printExpansion: number): any[] {
+    const artboardX = artboard.x || 0;
+    const artboardY = artboard.y || 0;
+    const artboardWidth = artboard.width;
+    const artboardHeight = artboard.height;
+    const tolerance = 5; // pixels tolerance for matching artboard bounds
+    
+    return shapes.map((shape: any) => {
+      if (!shape.points || shape.points.length === 0) return shape;
+      
+      // Calculate shape bounds from points
+      let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+      for (const pt of shape.points) {
+        minX = Math.min(minX, pt.x);
+        minY = Math.min(minY, pt.y);
+        maxX = Math.max(maxX, pt.x);
+        maxY = Math.max(maxY, pt.y);
+      }
+      const shapeWidth = maxX - minX;
+      const shapeHeight = maxY - minY;
+      
+      // Get transform position (shape's world position)
+      const tx = shape.transform?.x ?? 0;
+      const ty = shape.transform?.y ?? 0;
+      
+      // Calculate world bounds (shape center + local bounds)
+      // Shape points are relative to shape center, transform.x/y is the center position
+      const worldMinX = tx + minX;
+      const worldMinY = ty + minY;
+      const worldMaxX = tx + maxX;
+      const worldMaxY = ty + maxY;
+      
+      // Check if shape covers the artboard (within tolerance)
+      const coversLeft = worldMinX <= artboardX + tolerance;
+      const coversTop = worldMinY <= artboardY + tolerance;
+      const coversRight = worldMaxX >= artboardX + artboardWidth - tolerance;
+      const coversBottom = worldMaxY >= artboardY + artboardHeight - tolerance;
+      
+      // Only extend if shape covers all four edges of artboard
+      if (coversLeft && coversTop && coversRight && coversBottom) {
+        console.log(`[BleedExtension] Extending shape ${shape.id} by ${printExpansion}px for bleed coverage`);
+        
+        // Clone shape and extend points by printExpansion
+        const extendedShape = JSON.parse(JSON.stringify(shape));
+        
+        // Extend each point outward based on its position relative to center
+        for (const pt of extendedShape.points) {
+          // For corner points, extend diagonally
+          if (pt.x < 0) pt.x -= printExpansion;
+          else if (pt.x > 0) pt.x += printExpansion;
+          
+          if (pt.y < 0) pt.y -= printExpansion;
+          else if (pt.y > 0) pt.y += printExpansion;
+        }
+        
+        // Also update width/height if stored on shape
+        if (extendedShape.width !== undefined) {
+          extendedShape.width += printExpansion * 2;
+        }
+        if (extendedShape.height !== undefined) {
+          extendedShape.height += printExpansion * 2;
+        }
+        
+        return extendedShape;
+      }
+      
+      return shape;
+    });
   }
 }
 

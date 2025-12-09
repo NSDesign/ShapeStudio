@@ -33,8 +33,8 @@ const HighResExportSchema = z.object({
     compression: z.enum(['none', 'deflate']).default('none'),
     dpi: z.number().optional(),
     scale: z.number().min(0.1).max(10).default(1),
-    includeBleed: z.boolean().default(false),
-    includePrintMarks: z.boolean().default(false),
+    includeBleed: z.boolean().default(true),
+    includePrintMarks: z.boolean().default(true),
     backgroundColor: z.string().optional(),
     backgroundMode: z.enum(['transparent', 'artboard', 'custom']).default('transparent')
   }),
