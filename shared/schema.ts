@@ -365,9 +365,13 @@ export interface SetTransform {
   transformOrigin: 'center' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 }
 
+// Fit target for artboard alignment
+export type FitTarget = 'none' | 'artboard' | 'bleed';
+
 // Artboard alignment configuration  
 export interface ArtboardAlignment {
-  fitToArtboard: boolean;       // Automatically fit set to artboard bounds
+  fitToArtboard: boolean;       // DEPRECATED: Use fitTarget instead. Kept for backward compatibility.
+  fitTarget: FitTarget;         // What to fit shapes to: 'none', 'artboard', or 'bleed' (includes bleed area)
   fitMode: 'contain' | 'fill';  // contain = maintain aspect ratio, fill = stretch to fill both axes
   alignTo: 'artboard' | 'set' | 'none'; // What to align to
   alignmentType: 'center' | 'top-left' | 'top-center' | 'top-right' | 
@@ -3703,6 +3707,7 @@ export const GenerationSetUtils = {
     },
     artboardAlignment: {
       fitToArtboard: false,
+      fitTarget: 'none',
       fitMode: 'contain',
       alignTo: 'none',
       alignmentType: 'center',

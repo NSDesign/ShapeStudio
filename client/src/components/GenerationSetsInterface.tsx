@@ -62,6 +62,8 @@ interface GenerationSetsInterfaceBaseProps {
   onCurrentSetUpdate?: (setId: string) => void;
   // Mismatch detection for export count
   batchExportCount?: number;
+  // Bleed settings for fitToBleed option
+  bleedEnabled?: boolean;
 }
 
 // When onCreateSetFromState is provided, all state capture props are REQUIRED

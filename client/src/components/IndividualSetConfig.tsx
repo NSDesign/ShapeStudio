@@ -47,7 +47,8 @@ import {
   CompositingOperation,
   BLEND_MODES,
   EchoSpreadConfig,
-  DEFAULT_ECHO_SPREAD_CONFIG
+  DEFAULT_ECHO_SPREAD_CONFIG,
+  FitTarget
 } from '@shared/schema';
 import {
   ShapeSpecificPropertiesHelper,
@@ -69,6 +70,7 @@ interface IndividualSetConfigProps {
   showInlineValidation?: boolean;
   validationResult?: ValidationResult;
   allGenerationSets?: GenerationSet[];
+  bleedEnabled?: boolean;
 }
 
 // Available shape types grouped by category
@@ -148,7 +150,8 @@ export function IndividualSetConfig({
   globalZIndexEnabled = false,
   showInlineValidation = true,
   validationResult,
-  allGenerationSets = []
+  allGenerationSets = [],
+  bleedEnabled = false
 }: IndividualSetConfigProps) {
   const [fieldErrors, setFieldErrors] = useState<Record<string, ValidationError | null>>({});
   const [fieldWarnings, setFieldWarnings] = useState<Record<string, ValidationWarning | null>>({});
@@ -1586,26 +1589,44 @@ export function IndividualSetConfig({
               </AccordionTrigger>
               <AccordionContent className="pb-4">
                     <div className="grid grid-cols-1 gap-4 pt-2">
-                        {/* Fit to Artboard */}
-                        <div className="flex items-center justify-between">
-                            <Label className="text-white text-sm">Fit to Artboard</Label>
-                            <Checkbox
-                                checked={generationSet.artboardAlignment.fitToArtboard}
-                                onCheckedChange={(checked) => 
+                        {/* Fit Target - Dropdown to select fit behavior */}
+                        <div>
+                            <Label className="text-white text-xs">Fit Target</Label>
+                            <Select
+                                value={generationSet.artboardAlignment.fitTarget || (generationSet.artboardAlignment.fitToArtboard ? 'artboard' : 'none')}
+                                onValueChange={(value: FitTarget) => 
                                     onUpdate({
                                         artboardAlignment: {
                                             ...generationSet.artboardAlignment,
-                                            fitToArtboard: checked as boolean
+                                            fitTarget: value,
+                                            fitToArtboard: value !== 'none'
                                         }
                                     })
                                 }
-                                className="border-slate-600 data-[state=checked]:bg-blue-600"
-                                data-testid="checkbox-fit-to-artboard"
-                            />
+                                data-testid="select-fit-target"
+                            >
+                                <SelectTrigger className="bg-slate-700 border-slate-600 text-white mt-1">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-700 border-slate-600" style={{ zIndex: 10002 }}>
+                                    <SelectItem value="none" className="text-white hover:bg-slate-600">None</SelectItem>
+                                    <SelectItem value="artboard" className="text-white hover:bg-slate-600">Fit to Artboard</SelectItem>
+                                    <SelectItem 
+                                        value="bleed" 
+                                        className={`text-white hover:bg-slate-600 ${!bleedEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        disabled={!bleedEnabled}
+                                    >
+                                        Fit to Bleed {!bleedEnabled && '(enable bleed first)'}
+                                    </SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-slate-500 mt-1">
+                                {!bleedEnabled && 'Enable bleed display or render in Artboard settings to use "Fit to Bleed"'}
+                            </p>
                         </div>
 
-                        {/* Fit Mode (only shown when Fit to Artboard is enabled) */}
-                        {generationSet.artboardAlignment.fitToArtboard && (
+                        {/* Fit Mode (only shown when Fit Target is artboard or bleed) */}
+                        {(generationSet.artboardAlignment.fitTarget === 'artboard' || generationSet.artboardAlignment.fitTarget === 'bleed' || generationSet.artboardAlignment.fitToArtboard) && (
                             <>
                                 <div>
                                     <Label className="text-white text-xs">Fit Mode</Label>
