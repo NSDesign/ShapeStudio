@@ -3597,10 +3597,12 @@ export const useShapeEditor = () => {
         
         // Normalize margin to individual values
         const margin = overrides.artboardAlignment.margin || 0;
+        console.log(`📏 [MARGIN DEBUG] fitToArtboard margin value:`, margin, `type:`, typeof margin);
         const marginTop = typeof margin === 'number' ? margin : margin.top;
         const marginBottom = typeof margin === 'number' ? margin : margin.bottom;
         const marginLeft = typeof margin === 'number' ? margin : margin.left;
         const marginRight = typeof margin === 'number' ? margin : margin.right;
+        console.log(`📏 [MARGIN DEBUG] Effective margins: top=${marginTop}, bottom=${marginBottom}, left=${marginLeft}, right=${marginRight}`);
         
         // Calculate scale to fit within artboard with margin
         const availableWidth = currentArtboard.width - marginLeft - marginRight;
@@ -3625,6 +3627,7 @@ export const useShapeEditor = () => {
         });
         
         console.log(`✅ Fitted shapes to artboard with scaleX=${finalScaleX.toFixed(2)}, scaleY=${finalScaleY.toFixed(2)}`);
+        console.log(`📍 [POSITION DEBUG] First shape after fitToArtboard: x=${finalShapes[0]?.transform.x.toFixed(1)}, y=${finalShapes[0]?.transform.y.toFixed(1)}`);
       } else if (overrides.artboardAlignment.alignTo !== 'none' && currentArtboard && finalShapes.length > 0) {
         console.log(`🎯 Applying alignment from overrides: ${overrides.artboardAlignment.alignmentType}`);
         
@@ -3892,10 +3895,12 @@ export const useShapeEditor = () => {
               
               // Normalize margin to individual values
               const margin = set.artboardAlignment.margin || 0;
+              console.log(`📏 [SET MARGIN DEBUG] set "${set.name}" margin value:`, margin, `type:`, typeof margin);
               const marginTop = typeof margin === 'number' ? margin : margin.top;
               const marginBottom = typeof margin === 'number' ? margin : margin.bottom;
               const marginLeft = typeof margin === 'number' ? margin : margin.left;
               const marginRight = typeof margin === 'number' ? margin : margin.right;
+              console.log(`📏 [SET MARGIN DEBUG] Effective margins: top=${marginTop}, bottom=${marginBottom}, left=${marginLeft}, right=${marginRight}`);
               
               // Calculate scale to fit within artboard with margin
               const availableWidth = currentArtboard.width - marginLeft - marginRight;
