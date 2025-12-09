@@ -2867,10 +2867,25 @@ export class HighResolutionExportService {
       
       const tileHtml = this.generateTileRendererHtml(tileRenderData);
       
+      // DEBUG: Write first tile HTML to verify content
+      if (tile.index === 0) {
+        const fs = require('fs');
+        fs.writeFileSync('/tmp/tile1_debug.html', tileHtml);
+        console.log(`[HighResExport] Wrote tile 1 HTML to /tmp/tile1_debug.html`);
+      }
+      
       await currentPage.setViewport({
         width: Math.max(tile.width, 800),
         height: Math.max(tile.height, 600),
         deviceScaleFactor: 1
+      });
+      
+      // Capture browser console logs
+      currentPage.on('console', (msg) => {
+        const text = msg.text();
+        if (text.includes('TILE_RENDER') || text.includes('TILE DEBUG')) {
+          console.log(`[Puppeteer Console] ${text}`);
+        }
       });
       
       await currentPage.setContent(tileHtml, { waitUntil: 'networkidle0' });
@@ -2879,7 +2894,8 @@ export class HighResolutionExportService {
         return (window as any).renderShapes();
       });
       
-      // Log debug info for first tile only
+      // Log debug info for ALL tiles to see offset values
+      console.log(`[HighResExport] Tile ${tile.index + 1} render result: tileOffset=(${tile.x}, ${tile.y}), shapesRendered=${tileRenderResult.shapesRendered || 'N/A'}, calculatedScale=${tileRenderResult.debug?.calculatedScale || 'N/A'}`);
       if (tile.index === 0 && tileRenderResult.debug) {
         console.log(`[HighResExport] Tile 1 debug:`, JSON.stringify(tileRenderResult.debug, null, 2));
       }
