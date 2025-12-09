@@ -354,7 +354,8 @@ export class ImageExporter {
           cropMarks: config.overlays.printMarks.cropMarks,
           registrationMarks: config.overlays.printMarks.registrationMarks,
           markLength: markLengthPx,
-          markOffset: markOffsetPx
+          markOffset: markOffsetPx,
+          color: config.overlays.printMarks.color || '#000000'
         }
       );
     }
@@ -450,12 +451,13 @@ export class ImageExporter {
       registrationMarks: boolean;
       markLength: number;
       markOffset: number;
+      color: string;
     }
   ) {
-    const { cropMarks, registrationMarks, markLength, markOffset } = printMarksConfig;
+    const { cropMarks, registrationMarks, markLength, markOffset, color } = printMarksConfig;
     
     this.ctx.save();
-    this.ctx.strokeStyle = '#000000';
+    this.ctx.strokeStyle = color || '#000000';
     this.ctx.lineWidth = 1;
     this.ctx.setLineDash([]);
     

@@ -436,6 +436,7 @@ export interface PrintMarksSettings {
   markLength: number;  // Length of crop marks (uses unified overlayUnit, or percentage if scaleMode is 'percent')
   markOffset: number;  // Offset from bleed edge (uses unified overlayUnit, or percentage if scaleMode is 'percent')
   scaleMode?: PrintMarksScaleMode;  // 'none' = use overlayUnit, 'percent' = scale relative to artboard size
+  color: string;     // Print marks color (default: black #000000)
 }
 
 // Background settings for export
@@ -488,6 +489,7 @@ export const DEFAULT_PRINT_CONFIG: PrintConfig = {
       markLength: 12,
       markOffset: 3,
       scaleMode: 'none',
+      color: '#000000',  // Black
     },
     background: {
       mode: 'artboard',
@@ -530,6 +532,7 @@ export const PrintMarksSettingsSchema = z.object({
   markLength: z.number().min(0).max(100),  // Allow 0-100 for percentage mode
   markOffset: z.number().min(0).max(50),
   scaleMode: PrintMarksScaleModeSchema.optional(),
+  color: z.string(),  // Print marks color
 });
 
 export const BackgroundExportSettingsSchema = z.object({
