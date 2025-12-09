@@ -3870,64 +3870,10 @@ export const useShapeEditor = () => {
             });
           }
 
-          // Apply artboard alignment if configured
-          if (set.artboardAlignment && set.artboardAlignment.fitToArtboard && currentArtboard) {
-            const fitMode = set.artboardAlignment.fitMode || 'contain';
-            console.log(`📐 Applying fitToArtboard for set "${set.name}" (mode: ${fitMode})`);
-            
-            // Calculate bounding box of all shapes in this set using world bounds
-            if (setShapes.length > 0) {
-              let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-              
-              setShapes.forEach(shape => {
-                const worldBounds = shape.getWorldBounds();
-                
-                minX = Math.min(minX, worldBounds.x);
-                minY = Math.min(minY, worldBounds.y);
-                maxX = Math.max(maxX, worldBounds.x + worldBounds.width);
-                maxY = Math.max(maxY, worldBounds.y + worldBounds.height);
-              });
-              
-              const setBoundsWidth = maxX - minX;
-              const setBoundsHeight = maxY - minY;
-              const setCenterX = (minX + maxX) / 2;
-              const setCenterY = (minY + maxY) / 2;
-              
-              // Normalize margin to individual values
-              const margin = set.artboardAlignment.margin || 0;
-              console.log(`📏 [SET MARGIN DEBUG] set "${set.name}" margin value:`, margin, `type:`, typeof margin);
-              const marginTop = typeof margin === 'number' ? margin : margin.top;
-              const marginBottom = typeof margin === 'number' ? margin : margin.bottom;
-              const marginLeft = typeof margin === 'number' ? margin : margin.left;
-              const marginRight = typeof margin === 'number' ? margin : margin.right;
-              console.log(`📏 [SET MARGIN DEBUG] Effective margins: top=${marginTop}, bottom=${marginBottom}, left=${marginLeft}, right=${marginRight}`);
-              
-              // Calculate scale to fit within artboard with margin
-              const availableWidth = currentArtboard.width - marginLeft - marginRight;
-              const availableHeight = currentArtboard.height - marginTop - marginBottom;
-              
-              const scaleX = availableWidth / setBoundsWidth;
-              const scaleY = availableHeight / setBoundsHeight;
-              
-              // fitMode: 'contain' maintains aspect ratio, 'fill' stretches to fill both axes
-              const finalScaleX = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleX;
-              const finalScaleY = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleY;
-              
-              // Apply scale and center to artboard
-              setShapes.forEach(shape => {
-                // Scale relative to set center
-                const relX = shape.transform.x - setCenterX;
-                const relY = shape.transform.y - setCenterY;
-                
-                shape.transform.x = currentArtboard.x + marginLeft + availableWidth / 2 + (relX * finalScaleX);
-                shape.transform.y = currentArtboard.y + marginTop + availableHeight / 2 + (relY * finalScaleY);
-                shape.transform.scaleX *= finalScaleX;
-                shape.transform.scaleY *= finalScaleY;
-              });
-              
-              console.log(`✅ Fitted set to artboard with scaleX=${finalScaleX.toFixed(2)}, scaleY=${finalScaleY.toFixed(2)}`);
-            }
-          } else if (set.artboardAlignment && set.artboardAlignment.alignTo !== 'none' && currentArtboard) {
+          // NOTE: artboardAlignment.fitToArtboard is now handled inside generateShapesWithBatchConfig via overrides
+          // Skip duplicate set-level fitToArtboard since it was already applied above
+          // Only apply set-level alignment (alignTo) if NOT using fitToArtboard
+          if (set.artboardAlignment && !set.artboardAlignment.fitToArtboard && set.artboardAlignment.alignTo !== 'none' && currentArtboard) {
             console.log(`🎯 Applying alignment for set "${set.name}": ${set.artboardAlignment.alignmentType}`);
             
             // Calculate bounding box center
