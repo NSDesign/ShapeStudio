@@ -234,6 +234,7 @@ export interface AppSettingsDefaults {
   printMarksDisplay: boolean;
   printMarksRender: boolean;
   printMarksScaleMode?: PrintMarksScaleMode;  // 'none' = use overlayUnit, 'percent' = scale relative to artboard
+  printMarksColor?: string;  // Print marks color (default: black #000000)
 }
 
 // Default app settings

@@ -3594,7 +3594,7 @@ export class HighResolutionExportService {
       if (!config.cropMarks && !config.registrationMarks) return;
       
       ctx.save();
-      ctx.strokeStyle = '#000000';
+      ctx.strokeStyle = config.color || '#000000';
       ctx.lineWidth = 0.5;
       
       const markLength = config.markLength || 20;
@@ -3703,7 +3703,8 @@ export class HighResolutionExportService {
             cropMarks: config.cropMarks,
             registrationMarks: config.registrationMarks,
             markLength: config.markLength,
-            markOffset: config.markOffset
+            markOffset: config.markOffset,
+            color: config.color || '#000000'
           });
         }
         

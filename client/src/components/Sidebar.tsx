@@ -684,6 +684,25 @@ const PrintConfigurationSection = React.memo(function PrintConfigurationSection(
                   />
                 </div>
               </div>
+              <div className="space-y-1">
+                <Label className="text-[10px] text-slate-500">Color</Label>
+                <div className="flex gap-1">
+                  <input
+                    type="color"
+                    value={printConfig.overlays.printMarks.color || '#000000'}
+                    onChange={(e) => updatePrintMarks({ color: e.target.value })}
+                    className="h-6 w-8 rounded border border-slate-600 bg-slate-700 cursor-pointer"
+                    data-testid="input-print-marks-color"
+                  />
+                  <Input
+                    type="text"
+                    value={printConfig.overlays.printMarks.color || '#000000'}
+                    onChange={(e) => updatePrintMarks({ color: e.target.value })}
+                    className="h-6 text-xs bg-slate-700 border-slate-600 text-slate-200 flex-1"
+                    data-testid="input-print-marks-color-text"
+                  />
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -1956,6 +1975,7 @@ export default function Sidebar({
       printMarksDisplay: printConfig.overlays.printMarks.display,
       printMarksRender: printConfig.overlays.printMarks.render,
       printMarksScaleMode: printConfig.overlays.printMarks.scaleMode || 'none',
+      printMarksColor: printConfig.overlays.printMarks.color || '#000000',
     };
     
     console.log('Saving app settings:', settings);
@@ -1999,6 +2019,7 @@ export default function Sidebar({
             display: appSettingsDefaults.printMarksDisplay ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.display,
             render: appSettingsDefaults.printMarksRender ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.render,
             scaleMode: appSettingsDefaults.printMarksScaleMode ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.scaleMode,
+            color: appSettingsDefaults.printMarksColor ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.color,
           },
           background: DEFAULT_PRINT_CONFIG.overlays.background,
         },
@@ -3451,12 +3472,13 @@ export default function Sidebar({
         registrationMarks: boolean;
         markLength: number;
         markOffset: number;
+        color?: string;
       }
     ) => {
-      const { cropMarks, registrationMarks, markLength, markOffset } = printMarksConfig;
+      const { cropMarks, registrationMarks, markLength, markOffset, color } = printMarksConfig;
       
       ctx.save();
-      ctx.strokeStyle = '#000000';
+      ctx.strokeStyle = color || '#000000';
       ctx.lineWidth = 1;
       ctx.setLineDash([]);
       
@@ -3866,7 +3888,7 @@ export default function Sidebar({
       let printMarksGutterPx = 0;
       let printExpansion = 0;
       let artboardForPrintMarks: { x: number; y: number; width: number; height: number } | null = null;
-      let printMarksConfig: { cropMarks: boolean; registrationMarks: boolean; markLength: number; markOffset: number } | null = null;
+      let printMarksConfig: { cropMarks: boolean; registrationMarks: boolean; markLength: number; markOffset: number; color?: string } | null = null;
 
       if (exportMode === 'artboard' && selectedArtboardForExport) {
         // Export specific artboard
@@ -3944,7 +3966,8 @@ export default function Sidebar({
             cropMarks: printConfig.overlays.printMarks.cropMarks,
             registrationMarks: printConfig.overlays.printMarks.registrationMarks,
             markLength: markLengthPx,
-            markOffset: markOffsetPx
+            markOffset: markOffsetPx,
+            color: printConfig.overlays.printMarks.color || '#000000'
           };
         }
         
@@ -5167,7 +5190,7 @@ export default function Sidebar({
             let batchPrintMarksGutterPx = 0;
             let batchPrintExpansion = 0;
             let batchArtboardForPrintMarks: { x: number; y: number; width: number; height: number } | null = null;
-            let batchPrintMarksConfig: { cropMarks: boolean; registrationMarks: boolean; markLength: number; markOffset: number } | null = null;
+            let batchPrintMarksConfig: { cropMarks: boolean; registrationMarks: boolean; markLength: number; markOffset: number; color?: string } | null = null;
             
             if (targetArtboard) {
               // Get print configuration from artboard
@@ -5233,7 +5256,8 @@ export default function Sidebar({
                   cropMarks: batchPrintConfig.overlays.printMarks.cropMarks,
                   registrationMarks: batchPrintConfig.overlays.printMarks.registrationMarks,
                   markLength: markLengthPx,
-                  markOffset: markOffsetPx
+                  markOffset: markOffsetPx,
+                  color: batchPrintConfig.overlays.printMarks.color || '#000000'
                 };
               }
               
