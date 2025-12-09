@@ -3226,22 +3226,25 @@ export class HighResolutionExportService {
         const shapes = RENDER_DATA.shapes || [];
         
         // Debug: Log scale calculation and shape info
+        // Also check if exportSettings.scale was passed from the server
+        const passedScale = RENDER_DATA.scale || RENDER_DATA.exportSettings?.scale || 'not_passed';
         const debugInfo = {
           calculatedScale: scale,
+          passedScale: passedScale,
           fullCanvasWidth: fullCanvasWidth,
           fullCanvasHeight: fullCanvasHeight,
           artboardWidth: artboardWidth,
           artboardHeight: artboardHeight,
           printExpansion: printExpansion,
+          artboardPlusExpansion: artboardWidth + 2 * printExpansion,
+          expectedScale: fullCanvasWidth / (artboardWidth + 2 * printExpansion),
           tileOffsetX: TILE_OFFSET_X,
           tileOffsetY: TILE_OFFSET_Y,
           shapeCount: shapes.length,
-          firstShapeKeys: shapes.length > 0 ? Object.keys(shapes[0]) : [],
           firstShapeTransform: shapes.length > 0 ? shapes[0].transform : null,
-          firstShapeProperties: shapes.length > 0 ? shapes[0].properties : null,
-          firstShapeType: shapes.length > 0 ? shapes[0].type : null,
-          firstShapePointsCount: shapes.length > 0 && shapes[0].points ? shapes[0].points.length : 0
+          firstShapeType: shapes.length > 0 ? shapes[0].type : null
         };
+        console.log('TILE DEBUG:', JSON.stringify(debugInfo));
         
         // Sort shapes by z-index for proper layering
         const sortedShapes = [...shapes].sort((a, b) => 
