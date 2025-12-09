@@ -20,8 +20,9 @@ import { generateColor, generateGradientColors } from '../lib/hslColor';
 import { getEffectiveTranslateRange, recalculateGridForArtboard } from '../lib/artboardUtils';
 import { validateArtboardDimensions } from '../lib/artboardPresets';
 import { calculateEchoTransforms, isEchoEnabled, shouldApplyEchoToShape, type AutoMotionContext, type AbsolutePositionContext, type EchoTransform } from '@shared/echoUtils';
-import { DEFAULT_ECHO_SPREAD_CONFIG, IncrementalIndexDriver } from '@shared/schema';
+import { DEFAULT_ECHO_SPREAD_CONFIG, IncrementalIndexDriver, FitTarget, PrintUnitType } from '@shared/schema';
 import { calculateIncrementalValue, IncrementalConfig, IncrementalContext } from '@shared/incrementalUtils';
+import { convertPrintUnitToPixels } from '../lib/imageExport';
 
 // Interface for overriding UI state during generation (used for generation sets)
 export interface GenerationContextOverrides {
@@ -39,6 +40,7 @@ export interface GenerationContextOverrides {
   };
   artboardAlignment?: {
     fitToArtboard: boolean;
+    fitTarget?: FitTarget;  // New: 'none', 'artboard', or 'bleed'
     fitMode: 'contain' | 'fill';
     alignTo: 'artboard' | 'set' | 'none';
     alignmentType: 'center' | 'top-left' | 'top-center' | 'top-right' | 
@@ -890,6 +892,7 @@ export const useShapeEditor = () => {
       },
       artboardAlignment: {
         fitToArtboard: false,
+        fitTarget: 'none',
         fitMode: 'contain',
         alignTo: 'none',
         alignmentType: 'center',
@@ -3574,9 +3577,27 @@ export const useShapeEditor = () => {
     if (overrides?.artboardAlignment) {
       const currentArtboard = artboards.find(ab => ab.id === activeArtboard);
       
-      if (overrides.artboardAlignment.fitToArtboard && currentArtboard && finalShapes.length > 0) {
+      // Determine fit target: use new fitTarget field if set, fall back to legacy fitToArtboard boolean
+      const fitTarget = overrides.artboardAlignment.fitTarget || 
+        (overrides.artboardAlignment.fitToArtboard ? 'artboard' : 'none');
+      
+      if ((fitTarget === 'artboard' || fitTarget === 'bleed') && currentArtboard && finalShapes.length > 0) {
         const fitMode = overrides.artboardAlignment.fitMode || 'contain';
-        console.log(`📐 Applying fitToArtboard from overrides (mode: ${fitMode})`);
+        console.log(`📐 Applying fit to ${fitTarget} from overrides (mode: ${fitMode})`);
+        
+        // Calculate bleed expansion if fitting to bleed
+        let bleedPx = 0;
+        if (fitTarget === 'bleed' && currentArtboard.printConfig?.overlays?.bleed) {
+          const bleedConfig = currentArtboard.printConfig.overlays.bleed;
+          const overlayUnit = currentArtboard.printConfig.overlays.overlayUnit || 'pixels';
+          const dpi = currentArtboard.dpi || 300;
+          
+          // Only apply bleed if render is enabled
+          if (bleedConfig.render && bleedConfig.amount > 0) {
+            bleedPx = convertPrintUnitToPixels(bleedConfig.amount, overlayUnit as PrintUnitType, dpi);
+            console.log(`📐 [BLEED] Expanding target by bleed: ${bleedConfig.amount}${overlayUnit} = ${bleedPx.toFixed(1)}px`);
+          }
+        }
         
         // Calculate bounding box of all shapes using world bounds
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -3604,9 +3625,16 @@ export const useShapeEditor = () => {
         const marginRight = typeof margin === 'number' ? margin : margin.right;
         console.log(`📏 [MARGIN DEBUG] Effective margins: top=${marginTop}, bottom=${marginBottom}, left=${marginLeft}, right=${marginRight}`);
         
-        // Calculate scale to fit within artboard with margin
-        const availableWidth = currentArtboard.width - marginLeft - marginRight;
-        const availableHeight = currentArtboard.height - marginTop - marginBottom;
+        // Calculate target area dimensions (artboard + bleed if applicable)
+        // When fitting to bleed, the target area expands by bleedPx on all sides
+        const targetX = currentArtboard.x - bleedPx;
+        const targetY = currentArtboard.y - bleedPx;
+        const targetWidth = currentArtboard.width + (bleedPx * 2);
+        const targetHeight = currentArtboard.height + (bleedPx * 2);
+        
+        // Calculate scale to fit within target area with margin
+        const availableWidth = targetWidth - marginLeft - marginRight;
+        const availableHeight = targetHeight - marginTop - marginBottom;
         
         const scaleX = availableWidth / setBoundsWidth;
         const scaleY = availableHeight / setBoundsHeight;
@@ -3615,19 +3643,19 @@ export const useShapeEditor = () => {
         const finalScaleX = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleX;
         const finalScaleY = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleY;
         
-        // Apply scale and center to artboard
+        // Apply scale and center to target area
         finalShapes.forEach(shape => {
           const relX = shape.transform.x - setCenterX;
           const relY = shape.transform.y - setCenterY;
           
-          shape.transform.x = currentArtboard.x + marginLeft + availableWidth / 2 + (relX * finalScaleX);
-          shape.transform.y = currentArtboard.y + marginTop + availableHeight / 2 + (relY * finalScaleY);
+          shape.transform.x = targetX + marginLeft + availableWidth / 2 + (relX * finalScaleX);
+          shape.transform.y = targetY + marginTop + availableHeight / 2 + (relY * finalScaleY);
           shape.transform.scaleX *= finalScaleX;
           shape.transform.scaleY *= finalScaleY;
         });
         
-        console.log(`✅ Fitted shapes to artboard with scaleX=${finalScaleX.toFixed(2)}, scaleY=${finalScaleY.toFixed(2)}`);
-        console.log(`📍 [POSITION DEBUG] First shape after fitToArtboard: x=${finalShapes[0]?.transform.x.toFixed(1)}, y=${finalShapes[0]?.transform.y.toFixed(1)}`);
+        console.log(`✅ Fitted shapes to ${fitTarget} with scaleX=${finalScaleX.toFixed(2)}, scaleY=${finalScaleY.toFixed(2)}${bleedPx > 0 ? `, bleedPx=${bleedPx.toFixed(1)}` : ''}`);
+        console.log(`📍 [POSITION DEBUG] First shape after fit: x=${finalShapes[0]?.transform.x.toFixed(1)}, y=${finalShapes[0]?.transform.y.toFixed(1)}`);
       } else if (overrides.artboardAlignment.alignTo !== 'none' && currentArtboard && finalShapes.length > 0) {
         console.log(`🎯 Applying alignment from overrides: ${overrides.artboardAlignment.alignmentType}`);
         

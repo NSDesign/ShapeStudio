@@ -1461,7 +1461,7 @@ export function IndividualSetConfig({
                                       config: {
                                         ...currentConfig,
                                         colorShift: {
-                                          ...(currentConfig.colorShift ?? { hueDelta: 0, saturationDelta: 0, lightnessDelta: 0 }),
+                                          ...(currentConfig.colorShift ?? { hueDelta: 0, saturationDelta: 0, lightnessDelta: 0, jitter: { enabled: false, mode: 'fixed' as const, fixedAmount: 0, rangeMin: 0, rangeMax: 0 } }),
                                           enabled: checked as boolean
                                         }
                                       }
@@ -1488,7 +1488,7 @@ export function IndividualSetConfig({
                                           config: {
                                             ...currentConfig,
                                             colorShift: {
-                                              ...(currentConfig.colorShift ?? { enabled: true, saturationDelta: 0, lightnessDelta: 0 }),
+                                              ...(currentConfig.colorShift ?? { enabled: true, saturationDelta: 0, lightnessDelta: 0, jitter: { enabled: false, mode: 'fixed' as const, fixedAmount: 0, rangeMin: 0, rangeMax: 0 } }),
                                               hueDelta: value
                                             }
                                           }
@@ -1516,7 +1516,7 @@ export function IndividualSetConfig({
                                           config: {
                                             ...currentConfig,
                                             colorShift: {
-                                              ...(currentConfig.colorShift ?? { enabled: true, hueDelta: 0, lightnessDelta: 0 }),
+                                              ...(currentConfig.colorShift ?? { enabled: true, hueDelta: 0, lightnessDelta: 0, jitter: { enabled: false, mode: 'fixed' as const, fixedAmount: 0, rangeMin: 0, rangeMax: 0 } }),
                                               saturationDelta: value
                                             }
                                           }
@@ -1544,7 +1544,7 @@ export function IndividualSetConfig({
                                           config: {
                                             ...currentConfig,
                                             colorShift: {
-                                              ...(currentConfig.colorShift ?? { enabled: true, hueDelta: 0, saturationDelta: 0 }),
+                                              ...(currentConfig.colorShift ?? { enabled: true, hueDelta: 0, saturationDelta: 0, jitter: { enabled: false, mode: 'fixed' as const, fixedAmount: 0, rangeMin: 0, rangeMax: 0 } }),
                                               lightnessDelta: value
                                             }
                                           }

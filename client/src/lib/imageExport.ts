@@ -16,7 +16,7 @@ export interface TiffOptions {
   bitDepth?: BitDepth;  // 8-bit (default) or 16-bit per channel
 }
 
-function convertPrintUnitToPixels(value: number, unit: PrintUnitType, dpi: number): number {
+export function convertPrintUnitToPixels(value: number, unit: PrintUnitType, dpi: number): number {
   switch (unit) {
     case 'pixels':
       return value;

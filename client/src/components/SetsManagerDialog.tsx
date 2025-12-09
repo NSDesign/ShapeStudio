@@ -35,6 +35,8 @@ interface SetsManagerDialogBaseProps {
   onGlobalRepetitionModeChange?: (mode: 'fixed' | 'range') => void;
   onGlobalRepetitionValueChange?: (value: number) => void;
   onGlobalRepetitionRangeChange?: (range: [number, number]) => void;
+  // Bleed settings for fitToBleed option
+  bleedEnabled?: boolean;
 }
 
 // When onCreateSetFromState is provided, all state capture props are REQUIRED
@@ -95,7 +97,9 @@ export function SetsManagerDialog({
   globalRepetitionRange = [0, 0] as [number, number],
   onGlobalRepetitionModeChange,
   onGlobalRepetitionValueChange,
-  onGlobalRepetitionRangeChange
+  onGlobalRepetitionRangeChange,
+  // Bleed settings for fitToBleed option
+  bleedEnabled = false
 }: SetsManagerDialogProps) {
   const [validationState, setValidationState] = useState<{
     isValid: boolean;
@@ -280,6 +284,7 @@ export function SetsManagerDialog({
               shapeCountRange={shapeCountRange}
               onCreateSetFromState={onCreateSetFromState}
               batchExportCount={batchExportCount}
+              bleedEnabled={bleedEnabled}
             />
           ) : (
             <GenerationSetsInterface
@@ -293,6 +298,7 @@ export function SetsManagerDialog({
               onCurrentSetChange={onCurrentSetChange}
               onCurrentSetUpdate={onCurrentSetUpdate}
               batchExportCount={batchExportCount}
+              bleedEnabled={bleedEnabled}
             />
           )}
         </div>

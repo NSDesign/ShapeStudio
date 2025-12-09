@@ -108,6 +108,8 @@ export function GenerationSetsInterface({
   onCurrentSetUpdate,
   // Mismatch detection for export count
   batchExportCount,
+  // Bleed settings for fitToBleed option
+  bleedEnabled,
   // Raw UI state props for synchronous state capture
   enabledShapeTypes,
   scatterSettings,
@@ -974,6 +976,7 @@ export function GenerationSetsInterface({
               onUpdate={(updates: Partial<GenerationSet>) => handleUpdateSet(selectedSet.id, updates)}
               globalZIndexEnabled={globalZIndexEnabled}
               allGenerationSets={generationSets}
+              bleedEnabled={bleedEnabled}
             />
           ) : (
             <Card className="bg-slate-900 border-slate-700" data-testid="card-no-set-selected">
