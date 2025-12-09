@@ -2867,11 +2867,15 @@ export class HighResolutionExportService {
       
       const tileHtml = this.generateTileRendererHtml(tileRenderData);
       
-      // DEBUG: Write first tile HTML to verify content
+      // DEBUG: Log first tile HTML snippet to verify content
       if (tile.index === 0) {
-        const fs = require('fs');
-        fs.writeFileSync('/tmp/tile1_debug.html', tileHtml);
-        console.log(`[HighResExport] Wrote tile 1 HTML to /tmp/tile1_debug.html`);
+        // Check if TILE_OFFSET values are in the HTML
+        const tileOffsetMatch = tileHtml.match(/TILE_OFFSET_X = (\d+)/);
+        const tileOffsetYMatch = tileHtml.match(/TILE_OFFSET_Y = (\d+)/);
+        console.log(`[HighResExport] Tile 1 HTML contains: TILE_OFFSET_X=${tileOffsetMatch?.[1] || 'NOT_FOUND'}, TILE_OFFSET_Y=${tileOffsetYMatch?.[1] || 'NOT_FOUND'}`);
+        // Also check for our debug marker
+        const hasDebugMarker = tileHtml.includes('TILE_RENDER_V2');
+        console.log(`[HighResExport] Tile 1 HTML has TILE_RENDER_V2 marker: ${hasDebugMarker}`);
       }
       
       await currentPage.setViewport({
