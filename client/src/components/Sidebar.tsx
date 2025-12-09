@@ -9099,6 +9099,11 @@ export default function Sidebar({
           console.log('Edge case strategy changed:', strategy);
           updateExportSettings.mutate({ edgeCaseStrategy: strategy });
         }}
+        bleedEnabled={(() => {
+          const currentArtboard = artboards.find(a => a.id === activeArtboard);
+          const bleedConfig = currentArtboard?.printConfig?.overlays?.bleed;
+          return (bleedConfig?.display || bleedConfig?.render) && (bleedConfig?.amount || 0) > 0;
+        })()}
       />
       
       {/* TIFF Pre-flight Modal */}
