@@ -4652,8 +4652,10 @@ export default function Sidebar({
             backgroundColor: bgMode === 'artboard' ? artboardBgColor : undefined,
             backgroundMode: bgMode,
             compression: exportSettings.tiffCompression ?? 'none',
-            quality: 90
+            quality: 90,
+            saveProjectFile: exportSettings.exportSaveProjectFiles ?? false
           },
+          enabledShapeTypes: Array.from(enabledShapeTypes),
           archiveCompression: compressionSettings.enabled ? {
             enabled: true,
             format: compressionSettings.format,
@@ -4729,6 +4731,18 @@ export default function Sidebar({
           // Browser will stream file to disk when user clicks the download link
           setExportDownloadUrlGlobal(result.downloadUrl);
           setExportDownloadFilenameGlobal(filename);
+          
+          // Auto-download project file if it was saved
+          if (result.projectDownloadUrl && result.projectFilename) {
+            console.log(`📄 Downloading project file: ${result.projectFilename}`);
+            // Create invisible link to trigger project file download
+            const projectLink = document.createElement('a');
+            projectLink.href = result.projectDownloadUrl;
+            projectLink.download = result.projectFilename;
+            document.body.appendChild(projectLink);
+            projectLink.click();
+            document.body.removeChild(projectLink);
+          }
           
           setBatchProgress(100);
           setBatchStatus('Ready to save!');

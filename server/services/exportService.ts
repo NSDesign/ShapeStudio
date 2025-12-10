@@ -1890,8 +1890,10 @@ export interface HighResExportRequest {
     compression?: 'none' | 'deflate';
     flattenToRgb?: boolean;
     matteColor?: string;
+    saveProjectFile?: boolean;
   };
   archiveCompression?: ArchiveCompressionSettings;
+  enabledShapeTypes?: string[];
 }
 
 export interface HighResExportResult {
@@ -2469,8 +2471,56 @@ export class HighResolutionExportService {
           }
         }
         
-        // Store the file for download
+        // Store the image file for download
         this.storeExportFile(exportId, finalBuffer, finalFilename, finalMimeType);
+        
+        // Save project file if requested
+        if (request.exportSettings.saveProjectFile) {
+          const projectFilename = originalFilename.replace(/\.(tiff|png|jpeg|jpg|webp)$/i, '.json');
+          const projectData = {
+            version: '1.0.0',
+            timestamp: new Date().toISOString(),
+            shapes: request.shapes,
+            groups: request.groups || [],
+            enabledShapeTypes: request.enabledShapeTypes || [],
+            artboards: [request.artboard],
+            metadata: {
+              exportMode: 'artboard',
+              imageFilename: originalFilename,
+              shapeCount: request.shapes?.length || 0,
+              description: `High-resolution export - Generated ${request.shapes?.length || 0} shapes`
+            },
+            exportSettings: {
+              format: request.exportSettings.format,
+              dpi: request.exportSettings.dpi || request.artboard.dpi || 300,
+              scale: request.exportSettings.scale || 1,
+              quality: request.exportSettings.quality,
+              bitDepth: request.exportSettings.bitDepth ?? 8,
+              colorProfile: 'sRGB',
+              backgroundMode: request.exportSettings.backgroundMode || 'transparent',
+              compression: request.exportSettings.compression ?? 'none',
+              printConfig: request.artboard.printConfig ? {
+                bleed: {
+                  enabled: request.artboard.printConfig.overlays?.bleed?.render,
+                  amount: request.artboard.printConfig.overlays?.bleed?.amount,
+                  unit: request.artboard.printConfig.overlays?.overlayUnit
+                },
+                printMarks: {
+                  enabled: request.artboard.printConfig.overlays?.printMarks?.render,
+                  cropMarks: request.artboard.printConfig.overlays?.printMarks?.cropMarks,
+                  registrationMarks: request.artboard.printConfig.overlays?.printMarks?.registrationMarks
+                }
+              } : null
+            }
+          };
+          
+          const projectJson = JSON.stringify(projectData, null, 2);
+          const projectBuffer = Buffer.from(projectJson, 'utf-8');
+          
+          // Store project file with a separate key
+          this.storeExportFile(`${exportId}_project`, projectBuffer, projectFilename, 'application/json');
+          console.log(`[SSE Export] Saved project file: ${projectFilename}`);
+        }
         
         // Update session
         session.status = 'completed';
@@ -2480,7 +2530,7 @@ export class HighResolutionExportService {
         session.sizeBytes = finalBuffer.length;
         
         // Emit completion event
-        onProgress({
+        const completionEvent: any = {
           type: 'complete',
           downloadUrl: session.downloadUrl,
           filename: finalFilename,
@@ -2488,7 +2538,15 @@ export class HighResolutionExportService {
           sizeBytes: finalBuffer.length,
           dimensions: session.dimensions,
           timestamp: Date.now()
-        });
+        };
+        
+        // Add project file URL if saved
+        if (request.exportSettings.saveProjectFile) {
+          completionEvent.projectDownloadUrl = `/api/export/highres/download/${exportId}_project`;
+          completionEvent.projectFilename = originalFilename.replace(/\.(tiff|png|jpeg|jpg|webp)$/i, '.json');
+        }
+        
+        onProgress(completionEvent);
         
         console.log(`[SSE Export] Completed: ${exportId} - ${finalFilename}`);
       } else {

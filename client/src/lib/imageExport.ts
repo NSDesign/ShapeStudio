@@ -696,7 +696,9 @@ export interface ServerExportRequest {
     backgroundMode?: ExportBackgroundMode;
     compression?: TiffCompression;
     quality?: number; // JPEG/WebP quality (1-100)
+    saveProjectFile?: boolean;
   };
+  enabledShapeTypes?: string[];
   archiveCompression?: ArchiveCompressionSettings;
 }
 
@@ -963,6 +965,8 @@ export interface SSEExportResult {
   filename?: string;
   sizeBytes?: number;
   error?: string;
+  projectDownloadUrl?: string;
+  projectFilename?: string;
 }
 
 /**
@@ -1045,7 +1049,9 @@ export function executeServerExportWithSSE(
                 success: true, 
                 downloadUrl: data.downloadUrl,
                 filename: data.filename || 'export.tiff',
-                sizeBytes: data.sizeBytes || 0
+                sizeBytes: data.sizeBytes || 0,
+                projectDownloadUrl: data.projectDownloadUrl,
+                projectFilename: data.projectFilename
               });
               break;
               
