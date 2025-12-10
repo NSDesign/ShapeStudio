@@ -415,7 +415,7 @@ export default function Canvas({
           const markOffset = markOffsetPx / effectiveZoom;
           const markStroke = 1 / effectiveZoom;
           
-          ctx.strokeStyle = '#000000';
+          ctx.strokeStyle = printConfig.overlays.printMarks.color || '#000000';
           ctx.lineWidth = markStroke;
           ctx.setLineDash([]);
           
