@@ -497,6 +497,7 @@ export const useShapeEditor = () => {
               display: appSettingsDefaults.printMarksDisplay ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.display,
               render: appSettingsDefaults.printMarksRender ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.render,
               scaleMode: appSettingsDefaults.printMarksScaleMode ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.scaleMode,
+              color: appSettingsDefaults.printMarksColor ?? DEFAULT_PRINT_CONFIG.overlays.printMarks.color,
             },
             background: DEFAULT_PRINT_CONFIG.overlays.background,
           },

@@ -2119,6 +2119,14 @@ export default function Sidebar({
     }
   }, [exportMode, artboards, activeArtboard, selectedArtboardForExport]);
 
+  // Sync selectedArtboardForExport with activeArtboard to ensure exports use current print config
+  // This prevents the bug where UI shows print marks enabled but export uses a different artboard's config
+  useEffect(() => {
+    if (activeArtboard && artboards.find(a => a.id === activeArtboard)) {
+      setSelectedArtboardForExport(activeArtboard);
+    }
+  }, [activeArtboard, artboards]);
+
   // Generation sets handlers - now simplified since validation logic is centralized
   const handleSetChange = useCallback((setId: string | null) => {
     // The enhanced validation and state restoration logic is now handled centrally
