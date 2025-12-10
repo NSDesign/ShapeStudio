@@ -2995,7 +2995,7 @@ export class HighResolutionExportService {
     console.log(`[HighResExport] Stitching ${compositeInputs.length} tiles together`);
     
     // Composite all tiles onto the base canvas
-    const stitchedBuffer = await compositeImage
+    let stitchedBuffer = await compositeImage
       .composite(compositeInputs)
       .png()
       .toBuffer();
@@ -3004,6 +3004,55 @@ export class HighResolutionExportService {
     compositeInputs.length = 0;
     
     console.log(`[HighResExport] Stitched image: ${(stitchedBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    
+    // Add print marks overlay after stitching (print marks span entire canvas, not per-tile)
+    if (exportSettings.includePrintMarks && 
+        artboard.printConfig?.overlays?.printMarks?.render &&
+        printMarksGutterPx > 0) {
+      console.log(`[HighResExport] Adding print marks overlay`);
+      
+      const overlayUnit = artboard.printConfig.overlays?.overlayUnit || 'pixels';
+      const printMarksConfig = artboard.printConfig.overlays.printMarks;
+      
+      // Calculate mark dimensions in pixels
+      const scaleMode = printMarksConfig.scaleMode || 'none';
+      let markLengthPx: number;
+      let markOffsetPx: number;
+      
+      if (scaleMode === 'percent') {
+        const minDimension = Math.min(artboard.width, artboard.height);
+        markLengthPx = (printMarksConfig.markLength / 100) * minDimension;
+        markOffsetPx = (printMarksConfig.markOffset / 100) * minDimension;
+      } else {
+        markLengthPx = convertUnitToPixels(printMarksConfig.markLength, overlayUnit, effectiveDpi);
+        markOffsetPx = convertUnitToPixels(printMarksConfig.markOffset, overlayUnit, effectiveDpi);
+      }
+      
+      const printMarksSvg = this.generatePrintMarksSvg(
+        canvasWidth,
+        canvasHeight,
+        artboard.width,
+        artboard.height,
+        scale,
+        bleedPx,
+        printExpansion,
+        {
+          cropMarks: printMarksConfig.cropMarks,
+          registrationMarks: printMarksConfig.registrationMarks,
+          markLength: markLengthPx,
+          markOffset: markOffsetPx,
+          color: printMarksConfig.color || '#000000'
+        }
+      );
+      
+      if (printMarksSvg) {
+        stitchedBuffer = await sharp(stitchedBuffer, { limitInputPixels: false })
+          .composite([{ input: Buffer.from(printMarksSvg), top: 0, left: 0 }])
+          .png()
+          .toBuffer();
+        console.log(`[HighResExport] Print marks added to stitched image`);
+      }
+    }
     
     if (format === 'png') {
       progressCallback?.('Complete', totalSteps, totalSteps);
@@ -3917,6 +3966,97 @@ export class HighResolutionExportService {
       
       return shape;
     });
+  }
+
+  /**
+   * Generate an SVG overlay with print marks (crop marks and registration marks)
+   * Used for compositing print marks onto stitched tiled exports
+   */
+  private generatePrintMarksSvg(
+    canvasWidth: number,
+    canvasHeight: number,
+    artboardWidth: number,
+    artboardHeight: number,
+    scale: number,
+    bleedPx: number,
+    printExpansion: number,
+    printMarksConfig: {
+      cropMarks?: boolean;
+      registrationMarks?: boolean;
+      markLength: number;
+      markOffset: number;
+      color?: string;
+    }
+  ): string {
+    const { cropMarks, registrationMarks, markLength, markOffset, color = '#000000' } = printMarksConfig;
+    
+    if (!cropMarks && !registrationMarks) {
+      return '';
+    }
+    
+    // Scale the mark dimensions
+    const scaledMarkLength = markLength * scale;
+    const scaledMarkOffset = markOffset * scale;
+    const scaledBleedPx = bleedPx * scale;
+    
+    // Artboard position in canvas coordinates (after printExpansion offset)
+    const scaledPrintExpansion = printExpansion * scale;
+    const artboardX = scaledPrintExpansion;
+    const artboardY = scaledPrintExpansion;
+    const scaledArtboardWidth = artboardWidth * scale;
+    const scaledArtboardHeight = artboardHeight * scale;
+    
+    let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}">`;
+    svgContent += `<g stroke="${color}" stroke-width="1" fill="none">`;
+    
+    // Crop marks at artboard corners (positioned outside the bleed area)
+    if (cropMarks) {
+      const corners = [
+        { x: artboardX, y: artboardY, dx: -1, dy: -1 },                                    // Top-left
+        { x: artboardX + scaledArtboardWidth, y: artboardY, dx: 1, dy: -1 },               // Top-right
+        { x: artboardX, y: artboardY + scaledArtboardHeight, dx: -1, dy: 1 },              // Bottom-left
+        { x: artboardX + scaledArtboardWidth, y: artboardY + scaledArtboardHeight, dx: 1, dy: 1 }  // Bottom-right
+      ];
+      
+      corners.forEach(corner => {
+        const offsetX = (scaledBleedPx + scaledMarkOffset) * corner.dx;
+        const offsetY = (scaledBleedPx + scaledMarkOffset) * corner.dy;
+        
+        // Horizontal crop mark
+        const hx1 = corner.x + offsetX;
+        const hx2 = corner.x + offsetX + (scaledMarkLength * corner.dx);
+        svgContent += `<line x1="${hx1}" y1="${corner.y}" x2="${hx2}" y2="${corner.y}"/>`;
+        
+        // Vertical crop mark
+        const vy1 = corner.y + offsetY;
+        const vy2 = corner.y + offsetY + (scaledMarkLength * corner.dy);
+        svgContent += `<line x1="${corner.x}" y1="${vy1}" x2="${corner.x}" y2="${vy2}"/>`;
+      });
+    }
+    
+    // Registration marks (crosshairs at center of each edge)
+    if (registrationMarks) {
+      const regMarkSize = 8 * scale;
+      const regCircleRadius = 4 * scale;
+      
+      const edgeCenters = [
+        { x: artboardX + scaledArtboardWidth / 2, y: artboardY - scaledBleedPx - scaledMarkOffset - regMarkSize },  // Top
+        { x: artboardX + scaledArtboardWidth / 2, y: artboardY + scaledArtboardHeight + scaledBleedPx + scaledMarkOffset + regMarkSize },  // Bottom
+        { x: artboardX - scaledBleedPx - scaledMarkOffset - regMarkSize, y: artboardY + scaledArtboardHeight / 2 },  // Left
+        { x: artboardX + scaledArtboardWidth + scaledBleedPx + scaledMarkOffset + regMarkSize, y: artboardY + scaledArtboardHeight / 2 }   // Right
+      ];
+      
+      edgeCenters.forEach(center => {
+        // Draw crosshair
+        svgContent += `<line x1="${center.x - regMarkSize}" y1="${center.y}" x2="${center.x + regMarkSize}" y2="${center.y}"/>`;
+        svgContent += `<line x1="${center.x}" y1="${center.y - regMarkSize}" x2="${center.x}" y2="${center.y + regMarkSize}"/>`;
+        // Draw circle
+        svgContent += `<circle cx="${center.x}" cy="${center.y}" r="${regCircleRadius}"/>`;
+      });
+    }
+    
+    svgContent += '</g></svg>';
+    return svgContent;
   }
 }
 
