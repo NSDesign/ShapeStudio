@@ -1878,8 +1878,9 @@ export interface HighResExportRequest {
     printConfig?: any;
   };
   exportSettings: {
-    format: 'tiff' | 'png';
+    format: 'tiff' | 'png' | 'jpeg' | 'webp';
     bitDepth?: 8 | 16;
+    quality?: number; // JPEG/WebP quality (1-100)
     dpi?: number;
     scale?: number;
     includeBleed?: boolean;
@@ -2700,6 +2701,42 @@ export class HighResolutionExportService {
       };
     }
     
+    // Handle JPEG format
+    if (format === 'jpeg') {
+      progressCallback?.('Encoding JPEG...', 2, 3);
+      const quality = exportSettings.quality ?? 90;
+      const jpegBuffer = await sharp(pngBuffer)
+        .jpeg({ quality, mozjpeg: true })
+        .toBuffer();
+      progressCallback?.('Complete', 3, 3);
+      return {
+        success: true,
+        buffer: jpegBuffer,
+        mimeType: 'image/jpeg',
+        filename: `export-${Date.now()}.jpg`,
+        width: canvasWidth,
+        height: canvasHeight
+      };
+    }
+    
+    // Handle WebP format
+    if (format === 'webp') {
+      progressCallback?.('Encoding WebP...', 2, 3);
+      const quality = exportSettings.quality ?? 90;
+      const webpBuffer = await sharp(pngBuffer)
+        .webp({ quality, lossless: quality === 100 })
+        .toBuffer();
+      progressCallback?.('Complete', 3, 3);
+      return {
+        success: true,
+        buffer: webpBuffer,
+        mimeType: 'image/webp',
+        filename: `export-${Date.now()}.webp`,
+        width: canvasWidth,
+        height: canvasHeight
+      };
+    }
+    
     progressCallback?.('Encoding TIFF...', 2, 3);
     
     const tiffBuffer = await this.convertToTiff(pngBuffer, {
@@ -2975,6 +3012,42 @@ export class HighResolutionExportService {
         buffer: stitchedBuffer,
         mimeType: 'image/png',
         filename: `export-${Date.now()}.png`,
+        width: canvasWidth,
+        height: canvasHeight
+      };
+    }
+    
+    // Handle JPEG format
+    if (format === 'jpeg') {
+      progressCallback?.('Encoding final JPEG...', ++currentStep, totalSteps);
+      const quality = exportSettings.quality ?? 90;
+      const jpegBuffer = await sharp(stitchedBuffer, { limitInputPixels: false })
+        .jpeg({ quality, mozjpeg: true })
+        .toBuffer();
+      progressCallback?.('Complete', totalSteps, totalSteps);
+      return {
+        success: true,
+        buffer: jpegBuffer,
+        mimeType: 'image/jpeg',
+        filename: `export-${Date.now()}.jpg`,
+        width: canvasWidth,
+        height: canvasHeight
+      };
+    }
+    
+    // Handle WebP format
+    if (format === 'webp') {
+      progressCallback?.('Encoding final WebP...', ++currentStep, totalSteps);
+      const quality = exportSettings.quality ?? 90;
+      const webpBuffer = await sharp(stitchedBuffer, { limitInputPixels: false })
+        .webp({ quality, lossless: quality === 100 })
+        .toBuffer();
+      progressCallback?.('Complete', totalSteps, totalSteps);
+      return {
+        success: true,
+        buffer: webpBuffer,
+        mimeType: 'image/webp',
+        filename: `export-${Date.now()}.webp`,
         width: canvasWidth,
         height: canvasHeight
       };

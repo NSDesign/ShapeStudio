@@ -4643,7 +4643,7 @@ export default function Sidebar({
             printConfig: printConfig
           },
           exportSettings: {
-            format: 'tiff',
+            format: exportFormat === 'jpg' ? 'jpeg' : (exportFormat as 'tiff' | 'png' | 'jpeg' | 'webp'),
             bitDepth: is16Bit ? 16 : 8,
             dpi: artboardDpi,
             scale: effectiveExportScale,
@@ -4651,7 +4651,8 @@ export default function Sidebar({
             includePrintMarks: printConfig?.overlays.printMarks.render ?? false,
             backgroundColor: bgMode === 'artboard' ? artboardBgColor : undefined,
             backgroundMode: bgMode,
-            compression: exportSettings.tiffCompression ?? 'none'
+            compression: exportSettings.tiffCompression ?? 'none',
+            quality: 90
           },
           archiveCompression: compressionSettings.enabled ? {
             enabled: true,
@@ -4763,32 +4764,40 @@ export default function Sidebar({
       }
     };
 
-    // Wrapper function that shows TIFF pre-flight modal if needed
+    // Wrapper function that shows TIFF pre-flight modal if needed and routes to server for large exports
     const handleBatchExportWithPreflight = useCallback(() => {
       if (!exportSettings.exportBatchModeEnabled) return;
       
+      const preflightInfo = getTiffPreflightInfo();
+      const serverSupportedFormats = ['tiff', 'png', 'jpg', 'jpeg', 'webp'];
+      const isServerSupported = serverSupportedFormats.includes(exportFormat);
+      
+      // Check if server export is needed based on render mode setting
+      // CRITICAL: When requiresServerExport is true, ALWAYS use server regardless of renderMode
+      // because the browser literally cannot handle the export (memory/size limits)
+      const shouldUseServer = isServerSupported && (
+        exportSettings.renderMode === 'server' || // User explicitly chose server
+        preflightInfo.requiresServerExport // Force server when required (overrides all preferences)
+      );
+      
       if (exportFormat === 'tiff' && !exportSettings.skipTiffPreflightModal) {
         // Store the export function to call after confirmation
-        // Check if server export is needed
-        const preflightInfo = getTiffPreflightInfo();
-        if (preflightInfo.requiresServerExport) {
+        if (shouldUseServer) {
           pendingTiffExportRef.current = handleServerExport;
         } else {
           pendingTiffExportRef.current = handleBatchExportNewInternal;
         }
         setIsTiffPreflightOpen(true);
       } else {
-        // For TIFF exports that skip preflight, still check if server export is needed
-        if (exportFormat === 'tiff') {
-          const preflightInfo = getTiffPreflightInfo();
-          if (preflightInfo.requiresServerExport) {
-            handleServerExport();
-            return;
-          }
+        // For non-TIFF formats or TIFF with skipped preflight, check if server export is needed
+        if (shouldUseServer) {
+          console.log(`🖥️ Routing ${exportFormat.toUpperCase()} export to server (renderMode: ${exportSettings.renderMode}, requiresServer: ${preflightInfo.requiresServerExport})`);
+          handleServerExport();
+          return;
         }
         handleBatchExportNewInternal();
       }
-    }, [exportSettings.exportBatchModeEnabled, exportSettings.skipTiffPreflightModal, exportFormat, getTiffPreflightInfo]);
+    }, [exportSettings.exportBatchModeEnabled, exportSettings.skipTiffPreflightModal, exportFormat, getTiffPreflightInfo, exportSettings.renderMode]);
     
     // NEW BATCH EXPORT WITH ZIP PACKAGING (internal implementation)
     const handleBatchExportNewInternal = async () => {

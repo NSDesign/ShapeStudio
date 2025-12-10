@@ -686,7 +686,7 @@ export interface ServerExportRequest {
     printConfig?: PrintConfig;
   };
   exportSettings: {
-    format: 'tiff' | 'png';
+    format: 'tiff' | 'png' | 'jpeg' | 'webp';
     bitDepth: 8 | 16;
     dpi?: number;
     scale?: number;
@@ -695,6 +695,7 @@ export interface ServerExportRequest {
     backgroundColor?: string;
     backgroundMode?: ExportBackgroundMode;
     compression?: TiffCompression;
+    quality?: number; // JPEG/WebP quality (1-100)
   };
   archiveCompression?: ArchiveCompressionSettings;
 }
