@@ -2705,7 +2705,7 @@ export class HighResolutionExportService {
     if (format === 'jpeg') {
       progressCallback?.('Encoding JPEG...', 2, 3);
       const quality = exportSettings.quality ?? 90;
-      const jpegBuffer = await sharp(pngBuffer)
+      const jpegBuffer = await sharp(pngBuffer, { limitInputPixels: false })
         .jpeg({ quality, mozjpeg: true })
         .toBuffer();
       progressCallback?.('Complete', 3, 3);
@@ -2723,7 +2723,7 @@ export class HighResolutionExportService {
     if (format === 'webp') {
       progressCallback?.('Encoding WebP...', 2, 3);
       const quality = exportSettings.quality ?? 90;
-      const webpBuffer = await sharp(pngBuffer)
+      const webpBuffer = await sharp(pngBuffer, { limitInputPixels: false })
         .webp({ quality, lossless: quality === 100 })
         .toBuffer();
       progressCallback?.('Complete', 3, 3);
