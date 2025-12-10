@@ -5212,13 +5212,14 @@ export default function Sidebar({
             if (targetArtboard) {
               // Get print configuration from artboard
               const batchPrintConfig = targetArtboard.printConfig || DEFAULT_PRINT_CONFIG;
-              // Calculate effective DPI based on export scale (same as artboard export)
-              const batchExportDPI = Math.round(72 * effectiveExportScale);
+              // Use artboard's actual DPI for print marks calculations (not 72 * scale)
+              const batchExportDPI = targetArtboard.dpi || 300;
               const batchOverlayUnit = batchPrintConfig.overlays.overlayUnit || 'pixels';
               
               // DEBUG: Log print configuration for batch export
               console.log('🖨️ [BATCH EXPORT DEBUG] Print Configuration:', {
                 artboardName: targetArtboard.name,
+                artboardDPI: batchExportDPI,
                 hasPrintConfig: !!targetArtboard.printConfig,
                 overlayUnit: batchOverlayUnit,
                 bleed: {
@@ -5743,6 +5744,34 @@ export default function Sidebar({
                     imageFilename: filename,
                     shapeCount: currentExportShapes.length,
                     description: `Batch export ${i + 1} of ${exportBatchCount} - Generated ${currentExportShapes.length} shapes`
+                  },
+                  exportSettings: {
+                    format: exportFormat,
+                    dpi: targetArtboard?.dpi || 300,
+                    scale: effectiveExportScale,
+                    quality: exportQuality,
+                    bitDepth: exportSettings.tiffBitDepth ?? 8,
+                    colorProfile: exportSettings.embedIccProfile !== false ? 'sRGB' : 'none',
+                    backgroundMode: exportSettings.exportBackgroundMode || 'transparent',
+                    flattenToRgb: exportSettings.flattenToRgb ?? false,
+                    matteColor: exportSettings.matteColor || '#ffffff',
+                    compression: exportSettings.tiffCompression ?? 'none',
+                    artistName: exportSettings.artistName ?? '',
+                    copyrightText: exportSettings.copyrightText ?? '',
+                    imageTitle: exportSettings.imageTitle ?? '',
+                    imageDescription: exportSettings.imageDescription ?? '',
+                    printConfig: targetArtboard?.printConfig ? {
+                      bleed: {
+                        enabled: targetArtboard.printConfig.overlays.bleed.render,
+                        amount: targetArtboard.printConfig.overlays.bleed.amount,
+                        unit: targetArtboard.printConfig.overlays.overlayUnit
+                      },
+                      printMarks: {
+                        enabled: targetArtboard.printConfig.overlays.printMarks.render,
+                        cropMarks: targetArtboard.printConfig.overlays.printMarks.cropMarks,
+                        registrationMarks: targetArtboard.printConfig.overlays.printMarks.registrationMarks
+                      }
+                    } : null
                   }
                 };
                 
