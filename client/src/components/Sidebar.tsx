@@ -6141,30 +6141,73 @@ export default function Sidebar({
 
           {/* Format-Specific Options - shown inline after format selection */}
           {exportFormat === 'tiff' && (
-            <div className="p-2 bg-slate-800/50 rounded border border-slate-700 space-y-2">
+            <div className="p-2 bg-slate-800/50 rounded border border-slate-700 space-y-3">
               <Label className="text-xs text-slate-300 font-medium">TIFF Options</Label>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-slate-400">Compression</Label>
-                  <Select 
-                    value={exportSettings.tiffCompression ?? 'deflate'} 
-                    onValueChange={(value: 'none' | 'deflate') => updateExportSettings.mutate({ tiffCompression: value })}
-                  >
-                    <SelectTrigger className="h-7 text-xs bg-slate-800 border-slate-600 w-[140px]" data-testid="select-tiff-compression">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-600">
-                      <SelectItem value="deflate" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Deflate</SelectItem>
-                      <SelectItem value="none" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">None</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <p className="text-xs text-slate-500">
-                  {exportSettings.tiffCompression === 'deflate' 
-                    ? 'Lossless compression for smaller files' 
-                    : 'Uncompressed for maximum compatibility'}
-                </p>
+              
+              {/* Bit Depth */}
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-slate-400">Bit Depth</Label>
+                <Select 
+                  value={String(exportSettings.tiffBitDepth ?? 8)} 
+                  onValueChange={(value) => updateExportSettings.mutate({ tiffBitDepth: Number(value) as 8 | 16 })}
+                >
+                  <SelectTrigger className="h-7 text-xs bg-slate-800 border-slate-600 w-[140px]" data-testid="select-tiff-bit-depth">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-600">
+                    <SelectItem value="8" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">8-bit (Standard)</SelectItem>
+                    <SelectItem value="16" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">16-bit (Print)</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              
+              {/* Compression */}
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-slate-400">Compression</Label>
+                <Select 
+                  value={exportSettings.tiffCompression ?? 'deflate'} 
+                  onValueChange={(value: 'none' | 'deflate') => updateExportSettings.mutate({ tiffCompression: value })}
+                  disabled={(exportSettings.tiffBitDepth ?? 8) === 16}
+                >
+                  <SelectTrigger className="h-7 text-xs bg-slate-800 border-slate-600 w-[140px]" data-testid="select-tiff-compression">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-600">
+                    <SelectItem value="deflate" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Deflate</SelectItem>
+                    <SelectItem value="none" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">None</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              {(exportSettings.tiffBitDepth ?? 8) === 16 && (
+                <p className="text-xs text-slate-500">16-bit mode requires uncompressed output</p>
+              )}
+              
+              {/* Flatten to RGB */}
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <Label className="text-xs text-slate-400">Flatten to RGB</Label>
+                  <p className="text-xs text-slate-500">Drop alpha for smaller files</p>
+                </div>
+                <Switch
+                  checked={exportSettings.flattenToRgb ?? false}
+                  onCheckedChange={(checked) => updateExportSettings.mutate({ flattenToRgb: checked })}
+                  data-testid="toggle-flatten-rgb"
+                />
+              </div>
+              
+              {/* Matte Color (shown when flatten enabled or background is transparent) */}
+              {(exportSettings.flattenToRgb || exportSettings.exportBackgroundMode === 'transparent') && (
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Matte Color</Label>
+                  <input
+                    type="color"
+                    value={exportSettings.matteColor || '#ffffff'}
+                    onChange={(e) => updateExportSettings.mutate({ matteColor: e.target.value })}
+                    className="w-8 h-7 rounded border border-slate-600 cursor-pointer"
+                    data-testid="input-matte-color"
+                  />
+                </div>
+              )}
             </div>
           )}
 
