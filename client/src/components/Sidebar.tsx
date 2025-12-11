@@ -6120,6 +6120,7 @@ export default function Sidebar({
             </div>
           )}
 
+          {/* Format & Format Options Section */}
           <div className="space-y-2">
             <Label className="text-xs text-slate-400">Export Format</Label>
             <Select value={exportFormat} onValueChange={(value: any) => setExportFormat(value)}>
@@ -6132,32 +6133,46 @@ export default function Sidebar({
                 <SelectItem value="webp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">WebP</SelectItem>
                 <SelectItem value="avif" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">AVIF</SelectItem>
                 <SelectItem value="bmp" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">BMP</SelectItem>
-                <SelectItem value="tiff" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">TIFF</SelectItem>
-                <SelectItem value="pdf" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF</SelectItem>
+                <SelectItem value="tiff" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">TIFF (Print)</SelectItem>
+                <SelectItem value="pdf" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">PDF (Print)</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
-          {/* TIFF Compression (only shown when TIFF format is selected) */}
+          {/* Format-Specific Options - shown inline after format selection */}
           {exportFormat === 'tiff' && (
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">TIFF Compression</Label>
-              <Select 
-                value={exportSettings.tiffCompression ?? 'none'} 
-                onValueChange={(value: 'none' | 'deflate') => updateExportSettings.mutate({ tiffCompression: value })}
-              >
-                <SelectTrigger className="h-8 text-xs bg-slate-800 border-slate-600" data-testid="select-tiff-compression">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-600">
-                  <SelectItem value="none" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Uncompressed</SelectItem>
-                  <SelectItem value="deflate" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Deflate (Smaller files)</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="p-2 bg-slate-800/50 rounded border border-slate-700 space-y-2">
+              <Label className="text-xs text-slate-300 font-medium">TIFF Options</Label>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Compression</Label>
+                  <Select 
+                    value={exportSettings.tiffCompression ?? 'deflate'} 
+                    onValueChange={(value: 'none' | 'deflate') => updateExportSettings.mutate({ tiffCompression: value })}
+                  >
+                    <SelectTrigger className="h-7 text-xs bg-slate-800 border-slate-600 w-[140px]" data-testid="select-tiff-compression">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600">
+                      <SelectItem value="deflate" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">Deflate</SelectItem>
+                      <SelectItem value="none" className="text-white data-[highlighted]:bg-slate-600 data-[highlighted]:text-white">None</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-slate-500">
+                  {exportSettings.tiffCompression === 'deflate' 
+                    ? 'Lossless compression for smaller files' 
+                    : 'Uncompressed for maximum compatibility'}
+                </p>
+              </div>
+            </div>
+          )}
+
+          {exportFormat === 'pdf' && (
+            <div className="p-2 bg-slate-800/50 rounded border border-slate-700 space-y-1">
+              <Label className="text-xs text-slate-300 font-medium">PDF Options</Label>
               <p className="text-xs text-slate-500">
-                {exportSettings.tiffCompression === 'deflate' 
-                  ? 'Deflate compression reduces file size without quality loss' 
-                  : 'Uncompressed for maximum compatibility'}
+                Generates print-ready PDF with embedded image and metadata at the artboard's DPI setting.
               </p>
             </div>
           )}
@@ -6211,8 +6226,8 @@ export default function Sidebar({
             </p>
           </div>
 
-          {/* TIFF Print-Ready Warnings */}
-          {exportFormat === 'tiff' && (() => {
+          {/* Print Format Warnings - applies to TIFF and PDF */}
+          {['tiff', 'pdf'].includes(exportFormat) && (() => {
             const preflightInfo = getTiffPreflightInfo();
             const warnings: string[] = [];
             if (preflightInfo.hasLowDpi) {
@@ -6242,18 +6257,32 @@ export default function Sidebar({
             );
           })()}
 
+          {/* Lossy Format Quality Options */}
           {['jpg', 'webp', 'avif'].includes(exportFormat) && (
-            <div className="space-y-2">
-              <Label className="text-xs text-slate-400">Quality</Label>
-              <BufferedSliderWithLabel
-                value={exportQuality}
-                onValueCommit={(value) => setExportQuality(value)}
-                min={10}
-                max={100}
-                step={1}
-                className="w-full"
-                formatLabel={(v) => `${v}%`}
-              />
+            <div className="p-2 bg-slate-800/50 rounded border border-slate-700 space-y-2">
+              <Label className="text-xs text-slate-300 font-medium">
+                {exportFormat.toUpperCase()} Options
+              </Label>
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-slate-400">Quality</Label>
+                  <span className="text-xs text-slate-300">{exportQuality}%</span>
+                </div>
+                <BufferedSliderWithLabel
+                  value={exportQuality}
+                  onValueCommit={(value) => setExportQuality(value)}
+                  min={10}
+                  max={100}
+                  step={1}
+                  className="w-full"
+                  formatLabel={(v) => `${v}%`}
+                />
+                <p className="text-xs text-slate-500">
+                  {exportQuality >= 90 ? 'High quality, larger file size' : 
+                   exportQuality >= 70 ? 'Balanced quality and file size' :
+                   'Smaller files, some quality loss'}
+                </p>
+              </div>
             </div>
           )}
 
