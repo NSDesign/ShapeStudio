@@ -32,7 +32,9 @@ Preferred communication style: Simple, everyday language.
 - **Shape Masking System**: Independent top-level configuration for filtering rendered shapes (grid position filters).
 - **Export System**: Multi-format support (PNG, JPEG, WebP, AVIF, SVG, BMP, PDF, TIFF), high-resolution export, batch processing, and complete application state persistence.
   - **TIFF Export**: Professional printing format via UTIF library with embedded DPI metadata, compression handling, and memory management for large exports. Includes enhanced pre-flight UX and progress display.
+  - **PDF Export**: Server-side PDF generation using jsPDF with embedded images and metadata (title, author, copyright). Supports large artboards via tiled rendering pipeline.
   - **Archive Compression**: Optional ZIP/7z compression for large server exports (configurable format, level 1-9, auto-threshold). Compression happens server-side after export completes, with SSE progress phase updates and graceful fallback on failure.
+  - **Export Settings UI**: Reorganized format-specific option blocks (TIFF: bit depth, compression, flatten-to-RGB, matte color; JPEG/WebP/AVIF: quality slider; PDF: info panel). Print warnings apply to both TIFF and PDF formats.
 - **Print-on-Demand Configuration**: Per-artboard print settings including bleed, safe zone, print marks, and background modes, with unit conversion and backward compatibility.
 - **Enhanced Gradient System**: Comprehensive controls for linear/radial gradients, angle ranges, and intelligent type matching.
 - **Full Spectrum Color Interpolation**: Advanced HSL interpolation.
