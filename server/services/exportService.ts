@@ -17,6 +17,7 @@ import {
 } from '../../shared/schema';
 import { DEFAULT_BATCH_EXPORT_SETTINGS } from '../../shared/exportSchema';
 import JSZip from 'jszip';
+import { jsPDF } from 'jspdf';
 import { spawn } from 'child_process';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -1878,7 +1879,7 @@ export interface HighResExportRequest {
     printConfig?: any;
   };
   exportSettings: {
-    format: 'tiff' | 'png' | 'jpeg' | 'webp';
+    format: 'tiff' | 'png' | 'jpeg' | 'webp' | 'pdf';
     bitDepth?: 8 | 16;
     quality?: number; // JPEG/WebP quality (1-100)
     dpi?: number;
@@ -2815,6 +2816,33 @@ export class HighResolutionExportService {
       };
     }
     
+    // Handle PDF format
+    if (format === 'pdf') {
+      progressCallback?.('Creating PDF with metadata...', 2, 3);
+      const pdfBuffer = await this.convertToPdf(pngBuffer, {
+        width: canvasWidth,
+        height: canvasHeight,
+        dpi: effectiveDpi,
+        artistName: exportSettings.artistName,
+        copyrightText: exportSettings.copyrightText,
+        imageTitle: exportSettings.imageTitle || 'Untitled Artwork',
+        imageDescription: exportSettings.imageDescription,
+        embedIccProfile: exportSettings.embedIccProfile !== false
+      });
+      
+      console.log(`[HighResExport] Generated PDF: ${(pdfBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+      
+      progressCallback?.('Complete', 3, 3);
+      return {
+        success: true,
+        buffer: pdfBuffer,
+        mimeType: 'application/pdf',
+        filename: `export-${Date.now()}.pdf`,
+        width: canvasWidth,
+        height: canvasHeight
+      };
+    }
+    
     progressCallback?.('Encoding TIFF with metadata...', 2, 3);
     
     const tiffBuffer = await this.convertToTiff(pngBuffer, {
@@ -3284,6 +3312,40 @@ export class HighResolutionExportService {
       };
     }
     
+    // Handle PDF format (tiled)
+    if (format === 'pdf') {
+      progressCallback?.('Creating PDF with metadata...', ++currentStep, totalSteps);
+      
+      // Read the stitched PNG file
+      const pngBuffer = fs.readFileSync(currentTempFile);
+      
+      const pdfBuffer = await this.convertToPdf(pngBuffer, {
+        width: canvasWidth,
+        height: canvasHeight,
+        dpi: effectiveDpi,
+        artistName: exportSettings.artistName,
+        copyrightText: exportSettings.copyrightText,
+        imageTitle: exportSettings.imageTitle || 'Untitled Artwork',
+        imageDescription: exportSettings.imageDescription,
+        embedIccProfile: exportSettings.embedIccProfile !== false
+      });
+      
+      // Cleanup all temp files
+      cleanupTempFiles();
+      
+      console.log(`[HighResExport] Final PDF: ${(pdfBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+      
+      progressCallback?.('Complete', totalSteps, totalSteps);
+      return {
+        success: true,
+        buffer: pdfBuffer,
+        mimeType: 'application/pdf',
+        filename: `export-${Date.now()}.pdf`,
+        width: canvasWidth,
+        height: canvasHeight
+      };
+    }
+    
     // Phase 4: Encode to TIFF with full metadata (file-based)
     progressCallback?.('Encoding final TIFF with metadata...', ++currentStep, totalSteps);
     
@@ -3685,6 +3747,63 @@ export class HighResolutionExportService {
     }
     
     return metadata;
+  }
+
+  /**
+   * Convert PNG buffer to PDF with embedded image and metadata
+   * Uses jsPDF to create a PDF document with the image and metadata
+   */
+  private async convertToPdf(pngBuffer: Buffer, options: {
+    width: number;
+    height: number;
+    dpi: number;
+    artistName?: string;
+    copyrightText?: string;
+    imageTitle?: string;
+    imageDescription?: string;
+    embedIccProfile?: boolean;
+  }): Promise<Buffer> {
+    const { width, height, dpi, artistName, copyrightText, imageTitle, imageDescription } = options;
+    
+    // Calculate page dimensions in mm (PDF uses mm by default)
+    // Convert from pixels at the given DPI
+    const widthMm = (width / dpi) * 25.4;
+    const heightMm = (height / dpi) * 25.4;
+    
+    // Determine orientation
+    const orientation = widthMm > heightMm ? 'landscape' : 'portrait';
+    
+    // Create PDF with custom page size
+    const pdf = new jsPDF({
+      orientation,
+      unit: 'mm',
+      format: [widthMm, heightMm]
+    });
+    
+    // Set PDF metadata/properties
+    pdf.setProperties({
+      title: imageTitle || 'Shape Editor Export',
+      author: artistName || 'Shape Editor',
+      creator: 'Shape Editor - Replit',
+      subject: imageDescription || 'Generated artwork',
+      keywords: copyrightText ? `Copyright: ${copyrightText}` : undefined
+    });
+    
+    // Convert PNG buffer to base64 data URL for embedding
+    const pngBase64 = pngBuffer.toString('base64');
+    const pngDataUrl = `data:image/png;base64,${pngBase64}`;
+    
+    // Add the PNG image to fill the entire page
+    // Image position is at (0, 0) and fills the page dimensions
+    pdf.addImage(pngDataUrl, 'PNG', 0, 0, widthMm, heightMm, undefined, 'FAST');
+    
+    // Get PDF as ArrayBuffer and convert to Buffer
+    const pdfArrayBuffer = pdf.output('arraybuffer');
+    const pdfBuffer = Buffer.from(pdfArrayBuffer);
+    
+    console.log(`[HighResExport] Created PDF: ${widthMm.toFixed(1)}mm x ${heightMm.toFixed(1)}mm at ${dpi} DPI`);
+    
+    return pdfBuffer;
   }
 
   private async convertToTiff(pngBuffer: Buffer, options: { 

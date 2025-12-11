@@ -4,7 +4,7 @@ import { PrintConfig, DEFAULT_PRINT_CONFIG, PrintUnitType, ExportBackgroundMode 
 import * as UTIF from 'utif';
 import { embedIccInPng, embedIccInJpeg, getSrgbIccProfile, ColorSpaceOptions, DEFAULT_COLOR_SPACE_OPTIONS } from './iccProfile';
 
-export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp' | 'tiff';
+export type ImageFormat = 'png' | 'jpeg' | 'webp' | 'avif' | 'bmp' | 'tiff' | 'pdf';
 
 export type TiffCompression = 'none' | 'deflate';
 
@@ -622,7 +622,8 @@ export class ImageExporter {
       webp: 'webp',
       avif: 'avif',
       bmp: 'bmp',
-      tiff: 'tiff'
+      tiff: 'tiff',
+      pdf: 'pdf'
     };
     return extensions[format];
   }
@@ -639,6 +640,7 @@ export class ImageExporter {
         case 'jpeg':
         case 'bmp':
         case 'tiff': // TIFF is always supported via UTIF library
+        case 'pdf':  // PDF is always supported via jsPDF library
           return true;
         case 'webp':
           return canvas.toDataURL('image/webp').indexOf('data:image/webp') === 0;

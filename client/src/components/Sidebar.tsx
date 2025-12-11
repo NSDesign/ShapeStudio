@@ -4791,7 +4791,7 @@ export default function Sidebar({
       if (!exportSettings.exportBatchModeEnabled) return;
       
       const preflightInfo = getTiffPreflightInfo();
-      const serverSupportedFormats = ['tiff', 'png', 'jpg', 'jpeg', 'webp'];
+      const serverSupportedFormats = ['tiff', 'png', 'jpg', 'jpeg', 'webp', 'pdf'];
       const isServerSupported = serverSupportedFormats.includes(exportFormat);
       
       // Check if server export is needed based on render mode setting
