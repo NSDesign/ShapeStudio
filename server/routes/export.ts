@@ -28,7 +28,7 @@ const HighResExportSchema = z.object({
     printConfig: z.any().optional()
   }),
   exportSettings: z.object({
-    format: z.enum(['tiff', 'png']).default('tiff'),
+    format: z.enum(['tiff', 'png', 'jpeg', 'webp']).default('tiff'),
     bitDepth: z.union([z.literal(8), z.literal(16)]).default(16),
     compression: z.enum(['none', 'deflate']).default('none'),
     dpi: z.number().optional(),
@@ -36,7 +36,17 @@ const HighResExportSchema = z.object({
     includeBleed: z.boolean().default(true),
     includePrintMarks: z.boolean().default(true),
     backgroundColor: z.string().optional(),
-    backgroundMode: z.enum(['transparent', 'artboard', 'custom']).default('transparent')
+    backgroundMode: z.enum(['transparent', 'artboard', 'custom']).default('transparent'),
+    quality: z.number().min(1).max(100).optional().default(90),
+    flattenToRgb: z.boolean().optional().default(false),
+    matteColor: z.string().optional().default('#ffffff'),
+    saveProjectFile: z.boolean().optional().default(false),
+    // Metadata fields for professional print exports
+    artistName: z.string().optional(),
+    copyrightText: z.string().optional(),
+    imageTitle: z.string().optional(),
+    imageDescription: z.string().optional(),
+    embedIccProfile: z.boolean().optional().default(true)
   }),
   archiveCompression: z.object({
     enabled: z.boolean(),

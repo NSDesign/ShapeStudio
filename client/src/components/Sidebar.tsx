@@ -4652,8 +4652,16 @@ export default function Sidebar({
             backgroundColor: bgMode === 'artboard' ? artboardBgColor : undefined,
             backgroundMode: bgMode,
             compression: exportSettings.tiffCompression ?? 'none',
-            quality: 90,
-            saveProjectFile: exportSettings.exportSaveProjectFiles ?? false
+            quality: exportQuality ?? 90,
+            saveProjectFile: exportSettings.exportSaveProjectFiles ?? false,
+            flattenToRgb: exportSettings.flattenToRgb ?? false,
+            matteColor: exportSettings.matteColor ?? '#ffffff',
+            // Metadata fields for professional print exports
+            artistName: exportSettings.artistName ?? '',
+            copyrightText: exportSettings.copyrightText ?? '',
+            imageTitle: exportSettings.imageTitle ?? '',
+            imageDescription: exportSettings.imageDescription ?? '',
+            embedIccProfile: exportSettings.embedIccProfile !== false
           },
           enabledShapeTypes: Array.from(enabledShapeTypes),
           archiveCompression: compressionSettings.enabled ? {

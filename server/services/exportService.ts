@@ -1891,6 +1891,12 @@ export interface HighResExportRequest {
     flattenToRgb?: boolean;
     matteColor?: string;
     saveProjectFile?: boolean;
+    // Metadata fields for professional print exports
+    artistName?: string;
+    copyrightText?: string;
+    imageTitle?: string;
+    imageDescription?: string;
+    embedIccProfile?: boolean;
   };
   archiveCompression?: ArchiveCompressionSettings;
   enabledShapeTypes?: string[];
@@ -2747,11 +2753,23 @@ export class HighResolutionExportService {
     
     console.log(`[HighResExport] Captured PNG buffer: ${(pngBuffer.length / 1024).toFixed(1)} KB`);
     
+    // Extract metadata fields from exportSettings
+    const metadataOptions = {
+      dpi: effectiveDpi,
+      artistName: exportSettings.artistName,
+      copyrightText: exportSettings.copyrightText,
+      imageTitle: exportSettings.imageTitle,
+      imageDescription: exportSettings.imageDescription,
+      embedIccProfile: exportSettings.embedIccProfile !== false
+    };
+    
     if (format === 'png') {
+      progressCallback?.('Encoding PNG with metadata...', 2, 3);
+      const pngWithMetadata = await this.applyPngMetadata(pngBuffer, metadataOptions);
       progressCallback?.('Complete', 3, 3);
       return {
         success: true,
-        buffer: pngBuffer,
+        buffer: pngWithMetadata,
         mimeType: 'image/png',
         filename: `export-${Date.now()}.png`,
         width: canvasWidth,
@@ -2761,15 +2779,16 @@ export class HighResolutionExportService {
     
     // Handle JPEG format
     if (format === 'jpeg') {
-      progressCallback?.('Encoding JPEG...', 2, 3);
+      progressCallback?.('Encoding JPEG with metadata...', 2, 3);
       const quality = exportSettings.quality ?? 90;
       const jpegBuffer = await sharp(pngBuffer, { limitInputPixels: false })
         .jpeg({ quality, mozjpeg: true })
         .toBuffer();
+      const jpegWithMetadata = await this.applyJpegMetadata(jpegBuffer, { ...metadataOptions, quality });
       progressCallback?.('Complete', 3, 3);
       return {
         success: true,
-        buffer: jpegBuffer,
+        buffer: jpegWithMetadata,
         mimeType: 'image/jpeg',
         filename: `export-${Date.now()}.jpg`,
         width: canvasWidth,
@@ -2779,15 +2798,16 @@ export class HighResolutionExportService {
     
     // Handle WebP format
     if (format === 'webp') {
-      progressCallback?.('Encoding WebP...', 2, 3);
+      progressCallback?.('Encoding WebP with metadata...', 2, 3);
       const quality = exportSettings.quality ?? 90;
       const webpBuffer = await sharp(pngBuffer, { limitInputPixels: false })
         .webp({ quality, lossless: quality === 100 })
         .toBuffer();
+      const webpWithMetadata = await this.applyWebpMetadata(webpBuffer, { ...metadataOptions, quality });
       progressCallback?.('Complete', 3, 3);
       return {
         success: true,
-        buffer: webpBuffer,
+        buffer: webpWithMetadata,
         mimeType: 'image/webp',
         filename: `export-${Date.now()}.webp`,
         width: canvasWidth,
@@ -2795,14 +2815,19 @@ export class HighResolutionExportService {
       };
     }
     
-    progressCallback?.('Encoding TIFF...', 2, 3);
+    progressCallback?.('Encoding TIFF with metadata...', 2, 3);
     
     const tiffBuffer = await this.convertToTiff(pngBuffer, {
       bitDepth,
       dpi: effectiveDpi,
       compression: compression as 'none' | 'deflate',
       flattenToRgb: shouldFlattenToRgb,
-      matteColor: exportSettings.matteColor || '#ffffff'
+      matteColor: exportSettings.matteColor || '#ffffff',
+      artistName: exportSettings.artistName,
+      copyrightText: exportSettings.copyrightText,
+      imageTitle: exportSettings.imageTitle,
+      imageDescription: exportSettings.imageDescription,
+      embedIccProfile: exportSettings.embedIccProfile !== false
     });
     
     console.log(`[HighResExport] Generated TIFF: ${(tiffBuffer.length / 1024 / 1024).toFixed(2)} MB`);
@@ -2877,6 +2902,8 @@ export class HighResolutionExportService {
     // Set limitInputPixels to false to allow processing very large print files (A0+ at 600 DPI)
     // IMPORTANT: Always use 4 channels (RGBA) for compositing to avoid channel mismatch issues
     // The flatten to RGB happens in convertToTiff() if shouldFlattenToRgb is true
+    // Use type assertion to bypass TypeScript - Sharp accepts limitInputPixels with create
+    // but the types don't reflect this correctly
     let compositeImage = sharp({
       create: {
         width: canvasWidth,
@@ -2885,7 +2912,7 @@ export class HighResolutionExportService {
         background: { ...sharpBackground, alpha: 255 }
       },
       limitInputPixels: false
-    });
+    } as any);
     
     // Collect tile buffers for compositing
     const compositeInputs: Array<{ input: Buffer; left: number; top: number }> = [];
@@ -3048,29 +3075,35 @@ export class HighResolutionExportService {
       return { success: false, error: 'Export cancelled' };
     }
     
-    // Phase 3: Stitch tiles together
+    // Phase 3: Stitch tiles together using file-based processing
+    // This avoids Sharp's in-memory pixel limits by writing to disk
     progressCallback?.('Stitching tiles...', ++currentStep, totalSteps);
     console.log(`[HighResExport] Stitching ${compositeInputs.length} tiles together`);
     
-    // Composite all tiles onto the base canvas
-    // Use raw pipeline to avoid pixel limit issues during PNG encoding
-    let stitchedBuffer = await compositeImage
+    // Create a temporary file for the stitched output
+    const tempDir = os.tmpdir();
+    const tempStitchedFile = path.join(tempDir, `stitched_${Date.now()}.png`);
+    
+    // Write composite directly to file instead of buffer
+    // This bypasses Sharp's pixel limit for in-memory operations
+    await compositeImage
       .composite(compositeInputs)
-      .raw()
-      .toBuffer();
+      .png()
+      .toFile(tempStitchedFile);
     
-    // Re-create Sharp instance from raw buffer with explicit limitInputPixels: false
-    // This ensures subsequent operations don't hit pixel limits
-    const stitchedSharp = sharp(stitchedBuffer, { 
-      raw: { width: canvasWidth, height: canvasHeight, channels: 4 },
-      limitInputPixels: false 
-    });
-    
-    // Convert back to PNG buffer for further processing
-    stitchedBuffer = await stitchedSharp.png().toBuffer();
+    console.log(`[HighResExport] Stitched image written to: ${tempStitchedFile}`);
     
     // Clear composite inputs to free memory
     compositeInputs.length = 0;
+    
+    // Read the stitched file back with explicit limitInputPixels: false
+    // This is necessary for subsequent operations (print marks, format conversion)
+    let stitchedBuffer = await sharp(tempStitchedFile, { limitInputPixels: false })
+      .png()
+      .toBuffer();
+    
+    // Clean up temp file after reading
+    try { fs.unlinkSync(tempStitchedFile); } catch { /* ignore */ }
     
     console.log(`[HighResExport] Stitched image: ${(stitchedBuffer.length / 1024 / 1024).toFixed(2)} MB`);
     
@@ -3123,11 +3156,23 @@ export class HighResolutionExportService {
       }
     }
     
+    // Extract metadata fields for tiled exports
+    const tiledMetadataOptions = {
+      dpi: effectiveDpi,
+      artistName: exportSettings.artistName,
+      copyrightText: exportSettings.copyrightText,
+      imageTitle: exportSettings.imageTitle,
+      imageDescription: exportSettings.imageDescription,
+      embedIccProfile: exportSettings.embedIccProfile !== false
+    };
+    
     if (format === 'png') {
+      progressCallback?.('Encoding PNG with metadata...', ++currentStep, totalSteps);
+      const pngWithMetadata = await this.applyPngMetadata(stitchedBuffer, tiledMetadataOptions);
       progressCallback?.('Complete', totalSteps, totalSteps);
       return {
         success: true,
-        buffer: stitchedBuffer,
+        buffer: pngWithMetadata,
         mimeType: 'image/png',
         filename: `export-${Date.now()}.png`,
         width: canvasWidth,
@@ -3137,15 +3182,16 @@ export class HighResolutionExportService {
     
     // Handle JPEG format
     if (format === 'jpeg') {
-      progressCallback?.('Encoding final JPEG...', ++currentStep, totalSteps);
+      progressCallback?.('Encoding final JPEG with metadata...', ++currentStep, totalSteps);
       const quality = exportSettings.quality ?? 90;
       const jpegBuffer = await sharp(stitchedBuffer, { limitInputPixels: false })
         .jpeg({ quality, mozjpeg: true })
         .toBuffer();
+      const jpegWithMetadata = await this.applyJpegMetadata(jpegBuffer, { ...tiledMetadataOptions, quality });
       progressCallback?.('Complete', totalSteps, totalSteps);
       return {
         success: true,
-        buffer: jpegBuffer,
+        buffer: jpegWithMetadata,
         mimeType: 'image/jpeg',
         filename: `export-${Date.now()}.jpg`,
         width: canvasWidth,
@@ -3155,15 +3201,16 @@ export class HighResolutionExportService {
     
     // Handle WebP format
     if (format === 'webp') {
-      progressCallback?.('Encoding final WebP...', ++currentStep, totalSteps);
+      progressCallback?.('Encoding final WebP with metadata...', ++currentStep, totalSteps);
       const quality = exportSettings.quality ?? 90;
       const webpBuffer = await sharp(stitchedBuffer, { limitInputPixels: false })
         .webp({ quality, lossless: quality === 100 })
         .toBuffer();
+      const webpWithMetadata = await this.applyWebpMetadata(webpBuffer, { ...tiledMetadataOptions, quality });
       progressCallback?.('Complete', totalSteps, totalSteps);
       return {
         success: true,
-        buffer: webpBuffer,
+        buffer: webpWithMetadata,
         mimeType: 'image/webp',
         filename: `export-${Date.now()}.webp`,
         width: canvasWidth,
@@ -3171,15 +3218,20 @@ export class HighResolutionExportService {
       };
     }
     
-    // Phase 4: Encode to TIFF
-    progressCallback?.('Encoding final TIFF...', ++currentStep, totalSteps);
+    // Phase 4: Encode to TIFF with full metadata
+    progressCallback?.('Encoding final TIFF with metadata...', ++currentStep, totalSteps);
     
     const tiffBuffer = await this.convertToTiff(stitchedBuffer, {
       bitDepth,
       dpi: effectiveDpi,
       compression: compression as 'none' | 'deflate',
       flattenToRgb: shouldFlattenToRgb,
-      matteColor: exportSettings.matteColor || '#ffffff'
+      matteColor: exportSettings.matteColor || '#ffffff',
+      artistName: exportSettings.artistName,
+      copyrightText: exportSettings.copyrightText,
+      imageTitle: exportSettings.imageTitle,
+      imageDescription: exportSettings.imageDescription,
+      embedIccProfile: exportSettings.embedIccProfile !== false
     });
     
     console.log(`[HighResExport] Final TIFF: ${(tiffBuffer.length / 1024 / 1024).toFixed(2)} MB`);
@@ -3519,14 +3571,88 @@ export class HighResolutionExportService {
 </html>`;
   }
   
+  /**
+   * Build comprehensive metadata object for Sharp's withMetadata()
+   * Includes DPI, EXIF fields (artist, copyright, title, description), and optionally ICC profile
+   */
+  private buildImageMetadata(options: {
+    dpi?: number;
+    artistName?: string;
+    copyrightText?: string;
+    imageTitle?: string;
+    imageDescription?: string;
+    embedIccProfile?: boolean;
+  }): sharp.WriteableMetadata {
+    const metadata: sharp.WriteableMetadata = {};
+    
+    // DPI/density (used for print exports)
+    if (options.dpi) {
+      metadata.density = options.dpi;
+    }
+    
+    // EXIF metadata for artist, copyright, and description
+    // Sharp's withMetadata supports these as EXIF IFD0 tags
+    const exif: Record<string, string> = {};
+    
+    if (options.artistName?.trim()) {
+      exif.Artist = options.artistName.trim();
+    }
+    
+    if (options.copyrightText?.trim()) {
+      exif.Copyright = options.copyrightText.trim();
+    }
+    
+    if (options.imageDescription?.trim()) {
+      exif.ImageDescription = options.imageDescription.trim();
+    }
+    
+    // Note: imageTitle maps to XMP:Title which Sharp doesn't directly support
+    // We embed it in ImageDescription if no description is provided
+    if (options.imageTitle?.trim() && !options.imageDescription?.trim()) {
+      exif.ImageDescription = options.imageTitle.trim();
+    }
+    
+    if (Object.keys(exif).length > 0) {
+      metadata.exif = {
+        IFD0: exif
+      };
+    }
+    
+    // ICC Profile embedding
+    // When embedIccProfile is true, we use Sharp's default sRGB profile
+    // Sharp automatically embeds sRGB profile when 'icc' is set to a profile name
+    if (options.embedIccProfile !== false) {
+      // Sharp uses 'srgb' as the default ICC profile name
+      metadata.icc = 'srgb';
+    }
+    
+    return metadata;
+  }
+
   private async convertToTiff(pngBuffer: Buffer, options: { 
     bitDepth: 8 | 16; 
     dpi: number; 
     compression?: 'none' | 'deflate';
     flattenToRgb?: boolean;
     matteColor?: string;
+    artistName?: string;
+    copyrightText?: string;
+    imageTitle?: string;
+    imageDescription?: string;
+    embedIccProfile?: boolean;
   }): Promise<Buffer> {
-    const { bitDepth, dpi, compression = 'none', flattenToRgb = false, matteColor = '#ffffff' } = options;
+    const { 
+      bitDepth, 
+      dpi, 
+      compression = 'none', 
+      flattenToRgb = false, 
+      matteColor = '#ffffff',
+      artistName,
+      copyrightText,
+      imageTitle,
+      imageDescription,
+      embedIccProfile = true
+    } = options;
     
     // Use limitInputPixels: false to allow processing very large print files
     let pipeline = sharp(pngBuffer, { limitInputPixels: false });
@@ -3549,10 +3675,20 @@ export class HighResolutionExportService {
     // Sharp supports: 'none', 'jpeg', 'deflate', 'packbits', 'ccittfax4', 'lzw', 'webp', 'zstd', 'jp2k'
     const tiffCompression = compression === 'deflate' ? 'deflate' : 'none';
     
+    // Build comprehensive metadata including DPI, EXIF, and ICC profile
+    const metadata = this.buildImageMetadata({
+      dpi,
+      artistName,
+      copyrightText,
+      imageTitle,
+      imageDescription,
+      embedIccProfile
+    });
+    
+    console.log(`[HighResExport] Embedding metadata in TIFF: dpi=${dpi}, artist=${artistName || 'none'}, copyright=${copyrightText ? 'yes' : 'no'}, icc=${embedIccProfile ? 'sRGB' : 'none'}`);
+    
     const tiffBuffer = await pipeline
-      .withMetadata({
-        density: dpi
-      })
+      .withMetadata(metadata)
       .tiff({
         compression: tiffCompression,
         quality: 100
@@ -3560,6 +3696,97 @@ export class HighResolutionExportService {
       .toBuffer();
     
     return tiffBuffer;
+  }
+  
+  /**
+   * Apply metadata to PNG buffer
+   * Includes DPI, EXIF fields, and optionally ICC profile
+   * IMPORTANT: Preserves alpha channel by using ensureAlpha() to maintain transparency
+   */
+  private async applyPngMetadata(pngBuffer: Buffer, options: {
+    dpi?: number;
+    artistName?: string;
+    copyrightText?: string;
+    imageTitle?: string;
+    imageDescription?: string;
+    embedIccProfile?: boolean;
+  }): Promise<Buffer> {
+    const metadata = this.buildImageMetadata(options);
+    
+    if (Object.keys(metadata).length === 0) {
+      return pngBuffer; // No metadata to apply
+    }
+    
+    console.log(`[HighResExport] Embedding metadata in PNG: dpi=${options.dpi || 'default'}, artist=${options.artistName || 'none'}, icc=${options.embedIccProfile !== false ? 'sRGB' : 'none'}`);
+    
+    // Use ensureAlpha() to preserve transparency in PNG exports
+    // This prevents Sharp from stripping alpha channel during re-encoding
+    return await sharp(pngBuffer, { limitInputPixels: false })
+      .ensureAlpha()
+      .withMetadata(metadata)
+      .png({
+        compressionLevel: 6,  // Balanced compression (0-9)
+        adaptiveFiltering: true,
+        palette: false  // Ensure truecolor output, not palette-based
+      })
+      .toBuffer();
+  }
+  
+  /**
+   * Apply metadata to JPEG buffer
+   * Includes DPI, EXIF fields (including quality), and optionally ICC profile
+   */
+  private async applyJpegMetadata(jpegBuffer: Buffer, options: {
+    dpi?: number;
+    quality?: number;
+    artistName?: string;
+    copyrightText?: string;
+    imageTitle?: string;
+    imageDescription?: string;
+    embedIccProfile?: boolean;
+  }): Promise<Buffer> {
+    const metadata = this.buildImageMetadata(options);
+    
+    if (Object.keys(metadata).length === 0) {
+      return jpegBuffer; // No metadata to apply
+    }
+    
+    console.log(`[HighResExport] Embedding metadata in JPEG: dpi=${options.dpi || 'default'}, artist=${options.artistName || 'none'}, icc=${options.embedIccProfile !== false ? 'sRGB' : 'none'}`);
+    
+    return await sharp(jpegBuffer, { limitInputPixels: false })
+      .withMetadata(metadata)
+      .jpeg({ quality: options.quality || 90 })
+      .toBuffer();
+  }
+  
+  /**
+   * Apply metadata to WebP buffer
+   * WebP has limited metadata support but Sharp can embed ICC profiles
+   */
+  private async applyWebpMetadata(webpBuffer: Buffer, options: {
+    quality?: number;
+    artistName?: string;
+    copyrightText?: string;
+    imageTitle?: string;
+    imageDescription?: string;
+    embedIccProfile?: boolean;
+  }): Promise<Buffer> {
+    const metadata = this.buildImageMetadata(options);
+    
+    // WebP only really supports ICC profiles, not EXIF
+    // Remove EXIF fields for WebP
+    delete metadata.exif;
+    
+    if (Object.keys(metadata).length === 0) {
+      return webpBuffer; // No metadata to apply
+    }
+    
+    console.log(`[HighResExport] Embedding ICC profile in WebP: icc=${options.embedIccProfile !== false ? 'sRGB' : 'none'}`);
+    
+    return await sharp(webpBuffer, { limitInputPixels: false })
+      .withMetadata(metadata)
+      .webp({ quality: options.quality || 90 })
+      .toBuffer();
   }
   
   private generateRendererHtml(data: any): string {

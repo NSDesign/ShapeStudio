@@ -1,0 +1,32 @@
+Sharp's Built-in Memory Efficiency 
+Sharp inherently uses libvips's memory-saving features: 
+Streaming Processing: Libvips processes images in small, demand-driven chunks, rather than loading the entire uncompressed image into memory at once.
+Low Memory Footprint: This approach means that for standard operations (like resize, crop, format conversion for common file types like JPEG, PNG, WebP, TIFF), memory usage is very low, often a small fraction of the image's uncompressed size, even for multi-gigabyte images. 
+How to Optimize Sharp for Very Large Files
+If you are encountering memory issues when processing very large images using Sharp, it's typically due to specific implementation patterns within your Node.js application, not a limitation of Sharp/libvips itself. 
+You can optimize Sharp for large files in two main ways:
+Use Node.js Streams: The most effective way to prevent Node.js from holding the entire image in memory is to use the streaming API. Pipe the input data into Sharp and pipe the output from Sharp.
+javascript
+import { createReadStream, createWriteStream } from 'fs';
+import sharp from 'sharp';
+
+createReadStream('huge_input.tif')
+  .pipe(sharp().resize(2000, 2000).jpeg())
+  .pipe(createWriteStream('output.jpg'));
+Use code with caution.
+
+This ensures that Node.js only handles chunks of data as they flow through the pipeline.
+Configure Memory Allocator (Linux): On Linux systems, the default memory allocator (glibc) can cause memory fragmentation issues in long-running, multi-threaded processes like Sharp. Using an alternative allocator like jemalloc can dramatically improve memory stability and reduce peak memory usage.
+Install jemalloc on your system.
+Start your Node.js process using LD_PRELOAD:
+bash
+export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libjemalloc.so.2 node app.js
+Use code with caution.
+
+The Sharp documentation recommends this approach. 
+When to Use Native Libvips Bindings
+You would only need to move away from Sharp to native libvips bindings (like govips for Go, ruby-vips for Ruby, or a custom C++ application) if you require the following:
+Direct control over advanced, niche libvips operations that are not exposed by the Sharp API (e.g., specific color science filters or complex multi-image composition functions).
+Explicitly forcing intermediate data to disk for formats that don't inherently support streaming (rarely needed, as libvips often handles this internally if configured correctly via environment variables like VIPS_DISC_THRESHOLD).
+Integration into a non-Node.js environment that processes images (e.g., a Python or Java service). 
+For general high-performance, low-memory image processing in Node.js, Sharp already leverages libvips' strengths effectively, provided you implement streaming and consider the memory allocator configuration.

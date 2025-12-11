@@ -697,6 +697,14 @@ export interface ServerExportRequest {
     compression?: TiffCompression;
     quality?: number; // JPEG/WebP quality (1-100)
     saveProjectFile?: boolean;
+    flattenToRgb?: boolean;
+    matteColor?: string;
+    // Metadata fields for professional print exports
+    artistName?: string;
+    copyrightText?: string;
+    imageTitle?: string;
+    imageDescription?: string;
+    embedIccProfile?: boolean;
   };
   enabledShapeTypes?: string[];
   archiveCompression?: ArchiveCompressionSettings;
