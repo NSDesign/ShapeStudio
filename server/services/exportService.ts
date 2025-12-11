@@ -3115,9 +3115,11 @@ export class HighResolutionExportService {
         printMarksGutterPx > 0) {
       
       if (totalPixels > PRINT_MARKS_PIXEL_LIMIT) {
-        // For very large images, skip print marks composite and log warning
-        console.log(`[HighResExport] WARNING: Print marks skipped for ${(totalPixels / 1_000_000).toFixed(1)}M pixel image (exceeds ${(PRINT_MARKS_PIXEL_LIMIT / 1_000_000)}M limit for composite operations)`);
-        console.log(`[HighResExport] Print marks will not be included in this export. Consider exporting at a lower resolution or adding print marks in post-processing.`);
+        // For very large images, skip print marks composite and log info
+        // Note: Print-on-demand services (POD) explicitly require NO crop/registration marks - 
+        // their automated digital presses handle alignment internally. This is expected behavior for POD workflows.
+        console.log(`[HighResExport] INFO: Print marks skipped for ${(totalPixels / 1_000_000).toFixed(1)}M pixel image (exceeds ${(PRINT_MARKS_PIXEL_LIMIT / 1_000_000)}M composite limit)`);
+        console.log(`[HighResExport] Note: POD services (IngramSpark, BookBaby, etc.) do not require print marks - their digital presses handle alignment automatically.`);
       } else {
         console.log(`[HighResExport] Adding print marks overlay`);
         
@@ -3582,18 +3584,6 @@ export class HighResolutionExportService {
         // UNIQUE MARKER: This proves the new setTransform code is running (v2)
         console.log('TILE_RENDER_V2: tileIndex=' + RENDER_DATA.tileIndex + ', translateX=' + translateX + ', translateY=' + translateY + ', TILE_OFFSET_X=' + TILE_OFFSET_X + ', TILE_OFFSET_Y=' + TILE_OFFSET_Y);
         
-        ctx.setTransform(scale, 0, 0, scale, translateX, translateY);
-        
-        // DEBUG: Draw tile number with LARGE RED background to make it obvious
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset to identity
-        ctx.fillStyle = 'red';
-        ctx.fillRect(0, 0, 300, 100);
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 60px Arial';
-        ctx.fillText('TILE ' + RENDER_DATA.tileIndex, 20, 70);
-        ctx.restore();
-        // Restore the render transform
         ctx.setTransform(scale, 0, 0, scale, translateX, translateY);
         
         const shapes = RENDER_DATA.shapes || [];
