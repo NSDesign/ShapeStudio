@@ -28,7 +28,7 @@ const HighResExportSchema = z.object({
     printConfig: z.any().optional()
   }),
   exportSettings: z.object({
-    format: z.enum(['tiff', 'png', 'jpeg', 'webp']).default('tiff'),
+    format: z.enum(['tiff', 'png', 'jpeg', 'webp', 'pdf']).default('tiff'),
     bitDepth: z.union([z.literal(8), z.literal(16)]).default(16),
     compression: z.enum(['none', 'deflate']).default('none'),
     dpi: z.number().optional(),
