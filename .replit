@@ -52,4 +52,3 @@ args = '''curl -X POST \   -H "Content-Type: application/json" \   -H "x-api-key
 [userenv]
 
 [userenv.shared]
-LD_PRELOAD = "/nix/store/5nczbi61vlxd1rn4bvkaaypn1h579594-jemalloc-5.3.0/lib/libjemalloc.so.2"

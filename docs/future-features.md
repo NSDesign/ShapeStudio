@@ -3190,29 +3190,46 @@ const result = await executeServerExportWithSSE(
 
 **Root Cause:** Sharp/libvips needs to decode the entire image into memory to apply a composite overlay. For 339 megapixel images (e.g., A3 @ 300 DPI with bleed), this is ~1.36 GB of raw pixel data which exceeds internal limits.
 
+**Important Note:** Print-on-demand services (IngramSpark, BookBaby, PublishDrive, etc.) explicitly require NO crop/registration marks. Their automated digital presses handle alignment internally. The current behavior (skipping print marks for large exports) is actually correct for POD workflows.
+
 **Proposed Solutions (Priority Order):**
 
-1. **Render Print Marks in Tile Phase** 📋 RECOMMENDED
+1. **Per-Tile Print Marks Composite** 📋 RECOMMENDED
+   - Each tile is only ~64 megapixels (8000×8000), well under Sharp's 250M limit
+   - After capturing each tile from Puppeteer:
+     1. Generate a print marks SVG clipped to that tile's region
+     2. Use Sharp's `composite()` on each individual tile (64M pixels - no problem!)
+     3. Stitch the already-composited tiles together
+   - Avoids ever hitting the pixel limit since composite happens per-tile
+   - Complexity: Medium - requires calculating which marks fall within each tile's bounds
+   - Example flow:
+     ```
+     Tile 1 (0,0) 8000×8000      →  composite with marks for region (0,0,8000,8000)
+     Tile 2 (8000,0) 7651×8000   →  composite with marks for region (8000,0,...)
+     ...then stitch tile1_with_marks + tile2_with_marks → final image
+     ```
+
+2. **Render Print Marks in Puppeteer Tiles** 📋 ALTERNATIVE
    - Calculate which print marks intersect each tile
    - Render them directly in the Puppeteer tile HTML
    - No post-composite needed - print marks become part of the tile render
-   - Complexity: Medium - requires tile-aware print mark generation
+   - Complexity: Medium - requires tile-aware print mark generation in HTML
 
-2. **Raw Pixel Mosaic Writer** 📋 ALTERNATIVE
+3. **Raw Pixel Mosaic Writer** 📋 COMPLEX ALTERNATIVE
    - Extract raw RGBA pixels from each tile using `sharp(tile).raw().toBuffer()`
    - Write directly to a raw RGBA file at calculated byte offsets (row by row)
    - Stream the raw file through Sharp for format conversion
    - Avoids Sharp's composite entirely
    - Complexity: High - requires manual byte offset calculation
 
-3. **jemalloc Memory Allocator** ✅ IMPLEMENTED
+4. **jemalloc Memory Allocator** ✅ IMPLEMENTED
    - Install jemalloc: `nix install jemalloc`
    - Start Node with: `LD_PRELOAD=/path/to/libjemalloc.so node app.js`
    - Reduces memory fragmentation in multi-threaded Sharp operations
-   - May allow higher composite limits before failure
+   - Helps overall memory stability but doesn't solve the pixel limit issue
    - Reference: https://sharp.pixelplumbing.com/install/#linux-memory-allocator
 
-4. **Streaming Pipeline** 📋 FUTURE
+5. **Streaming Pipeline** 📋 FUTURE
    - Use Node.js streams throughout: `fs.createReadStream().pipe(sharp()).pipe(fs.createWriteStream())`
    - Prevents Node.js from holding entire image in memory
    - Reference: https://www.brand.dev/blog/preventing-memory-issues-in-node-js-sharp-a-journey
