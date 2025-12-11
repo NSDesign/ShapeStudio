@@ -3180,6 +3180,50 @@ const result = await executeServerExportWithSSE(
 - Seamless integration with ExportProgressOverlay component
 - Cancellation support via AbortController
 
+### Known Limitations
+
+#### 9.A Print Marks for Very Large Exports (300M+ Pixels) 🔶 WORKAROUND NEEDED
+
+**Problem:** Sharp's composite operation fails with "Input image exceeds pixel limit" for images above ~250-300 megapixels, even with `limitInputPixels: false` and file-based I/O. This affects print marks overlay for A3+ exports at 300 DPI when bleed/print marks expand the canvas beyond the limit.
+
+**Current Workaround:** Print marks are automatically skipped for exports exceeding 250M pixels with a console warning. The exported image is complete but without crop/registration marks.
+
+**Root Cause:** Sharp/libvips needs to decode the entire image into memory to apply a composite overlay. For 339 megapixel images (e.g., A3 @ 300 DPI with bleed), this is ~1.36 GB of raw pixel data which exceeds internal limits.
+
+**Proposed Solutions (Priority Order):**
+
+1. **Render Print Marks in Tile Phase** 📋 RECOMMENDED
+   - Calculate which print marks intersect each tile
+   - Render them directly in the Puppeteer tile HTML
+   - No post-composite needed - print marks become part of the tile render
+   - Complexity: Medium - requires tile-aware print mark generation
+
+2. **Raw Pixel Mosaic Writer** 📋 ALTERNATIVE
+   - Extract raw RGBA pixels from each tile using `sharp(tile).raw().toBuffer()`
+   - Write directly to a raw RGBA file at calculated byte offsets (row by row)
+   - Stream the raw file through Sharp for format conversion
+   - Avoids Sharp's composite entirely
+   - Complexity: High - requires manual byte offset calculation
+
+3. **jemalloc Memory Allocator** ✅ IMPLEMENTED
+   - Install jemalloc: `nix install jemalloc`
+   - Start Node with: `LD_PRELOAD=/path/to/libjemalloc.so node app.js`
+   - Reduces memory fragmentation in multi-threaded Sharp operations
+   - May allow higher composite limits before failure
+   - Reference: https://sharp.pixelplumbing.com/install/#linux-memory-allocator
+
+4. **Streaming Pipeline** 📋 FUTURE
+   - Use Node.js streams throughout: `fs.createReadStream().pipe(sharp()).pipe(fs.createWriteStream())`
+   - Prevents Node.js from holding entire image in memory
+   - Reference: https://www.brand.dev/blog/preventing-memory-issues-in-node-js-sharp-a-journey
+
+**Technical Resources:**
+- Sharp Memory Issues: https://github.com/lovell/sharp/issues/3052
+- Sharp Linux Allocator: https://sharp.pixelplumbing.com/install/#linux-memory-allocator
+- Memory Optimization Guide: https://www.brand.dev/blog/preventing-memory-issues-in-node-js-sharp-a-journey
+
+---
+
 ### Future Enhancements (Planned)
 
 #### 9.2 Estimated Time Display in Progress Overlay 📋 PLANNED

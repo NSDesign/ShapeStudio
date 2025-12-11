@@ -4,7 +4,7 @@ hidden = [".config", ".git", "generated-icon.png", "node_modules", "dist"]
 
 [nix]
 channel = "stable-24_05"
-packages = ["jq", "libuuid", "cairo", "pango", "pixman", "libpng", "libjpeg", "chromium", "p7zip"]
+packages = ["jq", "libuuid", "cairo", "pango", "pixman", "libpng", "libjpeg", "chromium", "p7zip", "jemalloc"]
 
 [deployment]
 deploymentTarget = "cloudrun"
@@ -48,3 +48,8 @@ args = "Project"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = '''curl -X POST \   -H "Content-Type: application/json" \   -H "x-api-key: $LIVE_API_KEY" \   -d '{"userId": "dev-user"}' \   https://shape-studio-NSDesign.replit.app/api/live/sets/enabled \   | jq -c '{data: .data}' \   | curl -X POST \     -H "Content-Type: application/json" \     -H "x-api-key: $LIVE_API_KEY" \     -d @- \     https://shape-studio-NSDesign.replit.app/api/live/sets/execute'''
+
+[userenv]
+
+[userenv.shared]
+LD_PRELOAD = "/nix/store/5nczbi61vlxd1rn4bvkaaypn1h579594-jemalloc-5.3.0/lib/libjemalloc.so.2"
