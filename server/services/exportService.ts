@@ -3075,39 +3075,37 @@ export class HighResolutionExportService {
       return { success: false, error: 'Export cancelled' };
     }
     
-    // Phase 3: Stitch tiles together using file-based processing
-    // This avoids Sharp's in-memory pixel limits by writing to disk
+    // Phase 3: Stitch tiles together using FULLY file-based processing
+    // For 300+ megapixel images, we MUST keep everything file-based to avoid Sharp's internal limits
+    // Even with limitInputPixels: false, toBuffer() can fail for extremely large images
     progressCallback?.('Stitching tiles...', ++currentStep, totalSteps);
     console.log(`[HighResExport] Stitching ${compositeInputs.length} tiles together`);
     
-    // Create a temporary file for the stitched output
+    // Create temporary files for the pipeline
     const tempDir = os.tmpdir();
-    const tempStitchedFile = path.join(tempDir, `stitched_${Date.now()}.png`);
+    const timestamp = Date.now();
+    let currentTempFile = path.join(tempDir, `stitched_${timestamp}.png`);
+    const tempFilesToCleanup: string[] = [];
     
     // Write composite directly to file instead of buffer
     // This bypasses Sharp's pixel limit for in-memory operations
     await compositeImage
       .composite(compositeInputs)
       .png()
-      .toFile(tempStitchedFile);
+      .toFile(currentTempFile);
+    tempFilesToCleanup.push(currentTempFile);
     
-    console.log(`[HighResExport] Stitched image written to: ${tempStitchedFile}`);
+    console.log(`[HighResExport] Stitched image written to: ${currentTempFile}`);
     
     // Clear composite inputs to free memory
     compositeInputs.length = 0;
     
-    // Read the stitched file back with explicit limitInputPixels: false
-    // This is necessary for subsequent operations (print marks, format conversion)
-    let stitchedBuffer = await sharp(tempStitchedFile, { limitInputPixels: false })
-      .png()
-      .toBuffer();
-    
-    // Clean up temp file after reading
-    try { fs.unlinkSync(tempStitchedFile); } catch { /* ignore */ }
-    
-    console.log(`[HighResExport] Stitched image: ${(stitchedBuffer.length / 1024 / 1024).toFixed(2)} MB`);
+    // Get file size for logging
+    const stitchedStats = fs.statSync(currentTempFile);
+    console.log(`[HighResExport] Stitched image: ${(stitchedStats.size / 1024 / 1024).toFixed(2)} MB`);
     
     // Add print marks overlay after stitching (print marks span entire canvas, not per-tile)
+    // Use file-to-file operation to avoid memory limits
     if (exportSettings.includePrintMarks && 
         artboard.printConfig?.overlays?.printMarks?.render &&
         printMarksGutterPx > 0) {
@@ -3148,10 +3146,14 @@ export class HighResolutionExportService {
       );
       
       if (printMarksSvg) {
-        stitchedBuffer = await sharp(stitchedBuffer, { limitInputPixels: false })
+        // Write print marks to a new file, keeping everything file-based
+        const printMarksFile = path.join(tempDir, `with_marks_${timestamp}.png`);
+        await sharp(currentTempFile, { limitInputPixels: false })
           .composite([{ input: Buffer.from(printMarksSvg), top: 0, left: 0 }])
           .png()
-          .toBuffer();
+          .toFile(printMarksFile);
+        tempFilesToCleanup.push(printMarksFile);
+        currentTempFile = printMarksFile;
         console.log(`[HighResExport] Print marks added to stitched image`);
       }
     }
@@ -3166,13 +3168,38 @@ export class HighResolutionExportService {
       embedIccProfile: exportSettings.embedIccProfile !== false
     };
     
+    // Helper function to clean up temp files
+    const cleanupTempFiles = () => {
+      for (const f of tempFilesToCleanup) {
+        try { fs.unlinkSync(f); } catch { /* ignore */ }
+      }
+    };
+    
+    // For all formats, we write to a temp file first, then read back at the end
+    // This ensures we never hold the full decoded image in memory during processing
+    
     if (format === 'png') {
       progressCallback?.('Encoding PNG with metadata...', ++currentStep, totalSteps);
-      const pngWithMetadata = await this.applyPngMetadata(stitchedBuffer, tiledMetadataOptions);
+      const finalPngFile = path.join(tempDir, `final_${timestamp}.png`);
+      
+      // Apply metadata and write to file
+      await sharp(currentTempFile, { limitInputPixels: false })
+        .ensureAlpha()
+        .withMetadata(this.buildImageMetadata(tiledMetadataOptions))
+        .png({ compressionLevel: 6, adaptiveFiltering: true, palette: false })
+        .toFile(finalPngFile);
+      
+      // Read final file to return as buffer
+      const pngBuffer = fs.readFileSync(finalPngFile);
+      
+      // Cleanup all temp files including final
+      cleanupTempFiles();
+      try { fs.unlinkSync(finalPngFile); } catch { /* ignore */ }
+      
       progressCallback?.('Complete', totalSteps, totalSteps);
       return {
         success: true,
-        buffer: pngWithMetadata,
+        buffer: pngBuffer,
         mimeType: 'image/png',
         filename: `export-${Date.now()}.png`,
         width: canvasWidth,
@@ -3184,14 +3211,25 @@ export class HighResolutionExportService {
     if (format === 'jpeg') {
       progressCallback?.('Encoding final JPEG with metadata...', ++currentStep, totalSteps);
       const quality = exportSettings.quality ?? 90;
-      const jpegBuffer = await sharp(stitchedBuffer, { limitInputPixels: false })
+      const finalJpegFile = path.join(tempDir, `final_${timestamp}.jpg`);
+      
+      // Encode JPEG and write to file
+      await sharp(currentTempFile, { limitInputPixels: false })
+        .withMetadata(this.buildImageMetadata(tiledMetadataOptions))
         .jpeg({ quality, mozjpeg: true })
-        .toBuffer();
-      const jpegWithMetadata = await this.applyJpegMetadata(jpegBuffer, { ...tiledMetadataOptions, quality });
+        .toFile(finalJpegFile);
+      
+      // Read final file to return as buffer
+      const jpegBuffer = fs.readFileSync(finalJpegFile);
+      
+      // Cleanup all temp files including final
+      cleanupTempFiles();
+      try { fs.unlinkSync(finalJpegFile); } catch { /* ignore */ }
+      
       progressCallback?.('Complete', totalSteps, totalSteps);
       return {
         success: true,
-        buffer: jpegWithMetadata,
+        buffer: jpegBuffer,
         mimeType: 'image/jpeg',
         filename: `export-${Date.now()}.jpg`,
         width: canvasWidth,
@@ -3203,14 +3241,29 @@ export class HighResolutionExportService {
     if (format === 'webp') {
       progressCallback?.('Encoding final WebP with metadata...', ++currentStep, totalSteps);
       const quality = exportSettings.quality ?? 90;
-      const webpBuffer = await sharp(stitchedBuffer, { limitInputPixels: false })
+      const finalWebpFile = path.join(tempDir, `final_${timestamp}.webp`);
+      
+      // Build metadata without EXIF for WebP
+      const webpMetadata = this.buildImageMetadata(tiledMetadataOptions);
+      delete webpMetadata.exif;
+      
+      // Encode WebP and write to file
+      await sharp(currentTempFile, { limitInputPixels: false })
+        .withMetadata(webpMetadata)
         .webp({ quality, lossless: quality === 100 })
-        .toBuffer();
-      const webpWithMetadata = await this.applyWebpMetadata(webpBuffer, { ...tiledMetadataOptions, quality });
+        .toFile(finalWebpFile);
+      
+      // Read final file to return as buffer
+      const webpBuffer = fs.readFileSync(finalWebpFile);
+      
+      // Cleanup all temp files including final
+      cleanupTempFiles();
+      try { fs.unlinkSync(finalWebpFile); } catch { /* ignore */ }
+      
       progressCallback?.('Complete', totalSteps, totalSteps);
       return {
         success: true,
-        buffer: webpWithMetadata,
+        buffer: webpBuffer,
         mimeType: 'image/webp',
         filename: `export-${Date.now()}.webp`,
         width: canvasWidth,
@@ -3218,10 +3271,11 @@ export class HighResolutionExportService {
       };
     }
     
-    // Phase 4: Encode to TIFF with full metadata
+    // Phase 4: Encode to TIFF with full metadata (file-based)
     progressCallback?.('Encoding final TIFF with metadata...', ++currentStep, totalSteps);
     
-    const tiffBuffer = await this.convertToTiff(stitchedBuffer, {
+    // Use file-based TIFF conversion for large images
+    const tiffBuffer = await this.convertToTiffFromFile(currentTempFile, {
       bitDepth,
       dpi: effectiveDpi,
       compression: compression as 'none' | 'deflate',
@@ -3233,6 +3287,9 @@ export class HighResolutionExportService {
       imageDescription: exportSettings.imageDescription,
       embedIccProfile: exportSettings.embedIccProfile !== false
     });
+    
+    // Cleanup temp files
+    cleanupTempFiles();
     
     console.log(`[HighResExport] Final TIFF: ${(tiffBuffer.length / 1024 / 1024).toFixed(2)} MB`);
     
@@ -3694,6 +3751,89 @@ export class HighResolutionExportService {
         quality: 100
       })
       .toBuffer();
+    
+    return tiffBuffer;
+  }
+  
+  /**
+   * Convert PNG file to TIFF with metadata (file-based for very large images)
+   * Uses toFile() instead of toBuffer() to handle images exceeding Sharp's buffer limits
+   */
+  private async convertToTiffFromFile(pngFilePath: string, options: { 
+    bitDepth: 8 | 16; 
+    dpi: number; 
+    compression?: 'none' | 'deflate';
+    flattenToRgb?: boolean;
+    matteColor?: string;
+    artistName?: string;
+    copyrightText?: string;
+    imageTitle?: string;
+    imageDescription?: string;
+    embedIccProfile?: boolean;
+  }): Promise<Buffer> {
+    const { 
+      bitDepth, 
+      dpi, 
+      compression = 'none', 
+      flattenToRgb = false, 
+      matteColor = '#ffffff',
+      artistName,
+      copyrightText,
+      imageTitle,
+      imageDescription,
+      embedIccProfile = true
+    } = options;
+    
+    // Use limitInputPixels: false to allow processing very large print files
+    let pipeline = sharp(pngFilePath, { limitInputPixels: false });
+    
+    if (flattenToRgb) {
+      const hexMatch = matteColor.match(/^#?([0-9a-fA-F]{6})$/);
+      const r = hexMatch ? parseInt(hexMatch[1].substring(0, 2), 16) : 255;
+      const g = hexMatch ? parseInt(hexMatch[1].substring(2, 4), 16) : 255;
+      const b = hexMatch ? parseInt(hexMatch[1].substring(4, 6), 16) : 255;
+      
+      pipeline = pipeline.flatten({ background: { r, g, b } });
+      console.log(`[HighResExport] Flattening to RGB with matte color: ${matteColor} (${r}, ${g}, ${b})`);
+    }
+    
+    if (bitDepth === 16) {
+      pipeline = pipeline.toColourspace('rgb16');
+    }
+    
+    // Map compression setting to Sharp's TIFF compression options
+    const tiffCompression = compression === 'deflate' ? 'deflate' : 'none';
+    
+    // Build comprehensive metadata including DPI, EXIF, and ICC profile
+    const metadata = this.buildImageMetadata({
+      dpi,
+      artistName,
+      copyrightText,
+      imageTitle,
+      imageDescription,
+      embedIccProfile
+    });
+    
+    console.log(`[HighResExport] Embedding metadata in TIFF (file-based): dpi=${dpi}, artist=${artistName || 'none'}, copyright=${copyrightText ? 'yes' : 'no'}, icc=${embedIccProfile ? 'sRGB' : 'none'}`);
+    
+    // Write to temp file then read back to return as buffer
+    // This avoids Sharp's internal buffer limits for large images
+    const tempDir = os.tmpdir();
+    const tempTiffFile = path.join(tempDir, `tiff_output_${Date.now()}.tiff`);
+    
+    await pipeline
+      .withMetadata(metadata)
+      .tiff({
+        compression: tiffCompression,
+        quality: 100
+      })
+      .toFile(tempTiffFile);
+    
+    // Read the resulting TIFF file as a buffer
+    const tiffBuffer = fs.readFileSync(tempTiffFile);
+    
+    // Cleanup temp file
+    try { fs.unlinkSync(tempTiffFile); } catch { /* ignore */ }
     
     return tiffBuffer;
   }
