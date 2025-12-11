@@ -997,6 +997,11 @@ export function registerExportRoutes(app: Express): void {
       
       console.log(`[SSE Export] Session started: ${exportId}`);
       
+      // Explicit headers to prevent iOS Safari from treating this JSON as a download
+      res.setHeader('Content-Type', 'application/json; charset=utf-8');
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('Cache-Control', 'no-store');
+      
       res.json({
         success: true,
         exportId,

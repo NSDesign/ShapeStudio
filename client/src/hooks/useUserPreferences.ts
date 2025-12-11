@@ -80,7 +80,7 @@ export function useUserPreferences() {
   // Extract app settings defaults
   const appSettingsDefaults: AppSettingsDefaults | null = preferences?.appSettingsDefaults as AppSettingsDefaults || null;
 
-  // Mutation for updating export settings
+  // Mutation for updating export settings with optimistic updates for instant UI response
   const updateExportSettings = useMutation({
     mutationFn: (newExportSettings: Partial<ExportSettingsConfig>) => {
       console.log('Updating export settings:', newExportSettings);
@@ -91,24 +91,39 @@ export function useUserPreferences() {
         },
       });
     },
-    onSuccess: (response, variables) => {
-      console.log('Export settings update successful:', variables);
-      // Update cache directly with the new settings
+    // Optimistic update - update UI immediately before server responds
+    onMutate: async (newExportSettings) => {
+      // Cancel any outgoing refetches to prevent overwriting optimistic update
+      await queryClient.cancelQueries({ queryKey: ['/api/user/preferences'] });
+      
+      // Snapshot the previous value for rollback
+      const previousData = queryClient.getQueryData<UserPreferences>(['/api/user/preferences']);
+      
+      // Optimistically update the cache immediately
       queryClient.setQueryData(['/api/user/preferences'], (oldData: UserPreferences | undefined) => {
         if (!oldData) return oldData;
         return {
           ...oldData,
           exportSettings: {
             ...(oldData.exportSettings as ExportSettingsConfig || {}),
-            ...variables,
+            ...newExportSettings,
           },
         };
       });
-      // Don't invalidate immediately - this causes the flicker
-      // The cache update above is sufficient for immediate UI update
+      
+      // Return context with previous data for rollback
+      return { previousData };
     },
-    onError: (error) => {
+    onSuccess: (response, variables) => {
+      console.log('Export settings update successful:', variables);
+      // Cache already updated optimistically, no need to update again
+    },
+    onError: (error, variables, context) => {
       console.error('Export settings update failed:', error);
+      // Rollback to previous value on error
+      if (context?.previousData) {
+        queryClient.setQueryData(['/api/user/preferences'], context.previousData);
+      }
     },
   });
 
