@@ -3053,10 +3053,21 @@ export class HighResolutionExportService {
     console.log(`[HighResExport] Stitching ${compositeInputs.length} tiles together`);
     
     // Composite all tiles onto the base canvas
+    // Use raw pipeline to avoid pixel limit issues during PNG encoding
     let stitchedBuffer = await compositeImage
       .composite(compositeInputs)
-      .png()
+      .raw()
       .toBuffer();
+    
+    // Re-create Sharp instance from raw buffer with explicit limitInputPixels: false
+    // This ensures subsequent operations don't hit pixel limits
+    const stitchedSharp = sharp(stitchedBuffer, { 
+      raw: { width: canvasWidth, height: canvasHeight, channels: 4 },
+      limitInputPixels: false 
+    });
+    
+    // Convert back to PNG buffer for further processing
+    stitchedBuffer = await stitchedSharp.png().toBuffer();
     
     // Clear composite inputs to free memory
     compositeInputs.length = 0;
