@@ -3105,56 +3105,67 @@ export class HighResolutionExportService {
     console.log(`[HighResExport] Stitched image: ${(stitchedStats.size / 1024 / 1024).toFixed(2)} MB`);
     
     // Add print marks overlay after stitching (print marks span entire canvas, not per-tile)
-    // Use file-to-file operation to avoid memory limits
+    // Note: For very large images (300M+ pixels), Sharp's composite operation exceeds internal limits
+    // even with file-based I/O. Skip print marks composite for these cases.
+    const totalPixels = canvasWidth * canvasHeight;
+    const PRINT_MARKS_PIXEL_LIMIT = 250_000_000; // 250 megapixels - safe threshold for composite
+    
     if (exportSettings.includePrintMarks && 
         artboard.printConfig?.overlays?.printMarks?.render &&
         printMarksGutterPx > 0) {
-      console.log(`[HighResExport] Adding print marks overlay`);
       
-      const overlayUnit = artboard.printConfig.overlays?.overlayUnit || 'pixels';
-      const printMarksConfig = artboard.printConfig.overlays.printMarks;
-      
-      // Calculate mark dimensions in pixels
-      const scaleMode = printMarksConfig.scaleMode || 'none';
-      let markLengthPx: number;
-      let markOffsetPx: number;
-      
-      if (scaleMode === 'percent') {
-        const minDimension = Math.min(artboard.width, artboard.height);
-        markLengthPx = (printMarksConfig.markLength / 100) * minDimension;
-        markOffsetPx = (printMarksConfig.markOffset / 100) * minDimension;
+      if (totalPixels > PRINT_MARKS_PIXEL_LIMIT) {
+        // For very large images, skip print marks composite and log warning
+        console.log(`[HighResExport] WARNING: Print marks skipped for ${(totalPixels / 1_000_000).toFixed(1)}M pixel image (exceeds ${(PRINT_MARKS_PIXEL_LIMIT / 1_000_000)}M limit for composite operations)`);
+        console.log(`[HighResExport] Print marks will not be included in this export. Consider exporting at a lower resolution or adding print marks in post-processing.`);
       } else {
-        markLengthPx = convertUnitToPixels(printMarksConfig.markLength, overlayUnit, effectiveDpi);
-        markOffsetPx = convertUnitToPixels(printMarksConfig.markOffset, overlayUnit, effectiveDpi);
-      }
-      
-      const printMarksSvg = this.generatePrintMarksSvg(
-        canvasWidth,
-        canvasHeight,
-        artboard.width,
-        artboard.height,
-        scale,
-        bleedPx,
-        printExpansion,
-        {
-          cropMarks: printMarksConfig.cropMarks,
-          registrationMarks: printMarksConfig.registrationMarks,
-          markLength: markLengthPx,
-          markOffset: markOffsetPx,
-          color: printMarksConfig.color || '#000000'
+        console.log(`[HighResExport] Adding print marks overlay`);
+        
+        const overlayUnit = artboard.printConfig.overlays?.overlayUnit || 'pixels';
+        const printMarksConfig = artboard.printConfig.overlays.printMarks;
+        
+        // Calculate mark dimensions in pixels
+        const scaleMode = printMarksConfig.scaleMode || 'none';
+        let markLengthPx: number;
+        let markOffsetPx: number;
+        
+        if (scaleMode === 'percent') {
+          const minDimension = Math.min(artboard.width, artboard.height);
+          markLengthPx = (printMarksConfig.markLength / 100) * minDimension;
+          markOffsetPx = (printMarksConfig.markOffset / 100) * minDimension;
+        } else {
+          markLengthPx = convertUnitToPixels(printMarksConfig.markLength, overlayUnit, effectiveDpi);
+          markOffsetPx = convertUnitToPixels(printMarksConfig.markOffset, overlayUnit, effectiveDpi);
         }
-      );
-      
-      if (printMarksSvg) {
-        // Write print marks to a new file, keeping everything file-based
-        const printMarksFile = path.join(tempDir, `with_marks_${timestamp}.png`);
-        await sharp(currentTempFile, { limitInputPixels: false })
-          .composite([{ input: Buffer.from(printMarksSvg), top: 0, left: 0 }])
-          .png()
-          .toFile(printMarksFile);
-        tempFilesToCleanup.push(printMarksFile);
-        currentTempFile = printMarksFile;
-        console.log(`[HighResExport] Print marks added to stitched image`);
+        
+        const printMarksSvg = this.generatePrintMarksSvg(
+          canvasWidth,
+          canvasHeight,
+          artboard.width,
+          artboard.height,
+          scale,
+          bleedPx,
+          printExpansion,
+          {
+            cropMarks: printMarksConfig.cropMarks,
+            registrationMarks: printMarksConfig.registrationMarks,
+            markLength: markLengthPx,
+            markOffset: markOffsetPx,
+            color: printMarksConfig.color || '#000000'
+          }
+        );
+        
+        if (printMarksSvg) {
+          // Write print marks to a new file, keeping everything file-based
+          const printMarksFile = path.join(tempDir, `with_marks_${timestamp}.png`);
+          await sharp(currentTempFile, { limitInputPixels: false })
+            .composite([{ input: Buffer.from(printMarksSvg), top: 0, left: 0 }])
+            .png()
+            .toFile(printMarksFile);
+          tempFilesToCleanup.push(printMarksFile);
+          currentTempFile = printMarksFile;
+          console.log(`[HighResExport] Print marks added to stitched image`);
+        }
       }
     }
     
