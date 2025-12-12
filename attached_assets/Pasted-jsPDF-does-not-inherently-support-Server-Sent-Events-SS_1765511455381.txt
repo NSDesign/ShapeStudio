@@ -1,0 +1,16 @@
+jsPDF does not inherently support Server-Sent Events (SSE) or Node.js streams in the same way that sharp does. sharp is built on the libvips library, which uses a highly efficient, memory-saving streaming process for image manipulation. jsPDF, in contrast, is primarily a client-side (browser-first) library that builds the PDF document in memory. 
+Here is a breakdown of the differences:
+Sharp Streaming
+Mechanism: sharp utilizes Node.js streams (readable/writable) to process image data in chunks, rather than loading the entire image into memory at once. This allows it to handle very large images efficiently and pass data through pipelines.
+Purpose: The streaming in sharp refers to this internal processing efficiency and the ability to pipe data between operations, not typically Server-Sent Events (SSE) which is an HTTP protocol for pushing events to the client browser. 
+jsPDF and Streaming
+Mechanism: jsPDF works by constructing the entire PDF document internally using JavaScript code, typically in the browser's memory. Once complete, it provides methods like save() or output() to get the final Blob, Buffer, or Data URI.
+SSE Support: jsPDF has no built-in functionality for SSE. Server-Sent Events are an API for pushing event data from a server to a client over a long-lived HTTP connection, which is a different concern from the internal mechanics of building a PDF document.
+Server-Side Usage: While jsPDF can be made to run on the server (e.g., using a Node.js package or a headless browser), its architecture is still fundamentally in-memory. 
+The Role of sharp-pdf
+The sharp-pdf package would be used to bridge these libraries by:
+Using sharp to efficiently process images.
+Taking the resulting image data/buffer.
+Passing that data to jsPDF (or a similar PDF library) to embed it into a PDF document structure. 
+You would need to manage the SSE communication yourself in your application code, using sharp's streaming capability for efficiency in the background if necessary, but the final PDF generation is a separate, synchronous step within jsPDF.
+These articles clarify that `jsPDF` is primarily client-side and doesn't natively support the streaming or SSE capabilities found in libraries like `sharp`:

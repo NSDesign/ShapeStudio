@@ -2819,6 +2819,12 @@ export class HighResolutionExportService {
     // Handle PDF format
     if (format === 'pdf') {
       progressCallback?.('Creating PDF with metadata...', 2, 3);
+      
+      // Create a sub-progress callback to emit SSE events during PDF conversion
+      const pdfProgressCallback = (message: string) => {
+        progressCallback?.(message, 2, 3);
+      };
+      
       const pdfBuffer = await this.convertToPdf(pngBuffer, {
         width: canvasWidth,
         height: canvasHeight,
@@ -2828,7 +2834,7 @@ export class HighResolutionExportService {
         imageTitle: exportSettings.imageTitle || 'Untitled Artwork',
         imageDescription: exportSettings.imageDescription,
         embedIccProfile: exportSettings.embedIccProfile !== false
-      });
+      }, pdfProgressCallback);
       
       console.log(`[HighResExport] Generated PDF: ${(pdfBuffer.length / 1024 / 1024).toFixed(2)} MB`);
       
@@ -3319,6 +3325,12 @@ export class HighResolutionExportService {
       // Read the stitched PNG file
       const pngBuffer = fs.readFileSync(currentTempFile);
       
+      // Create a sub-progress callback to emit SSE events during PDF conversion
+      // This is critical for large images where PDF conversion can take 60+ seconds
+      const pdfProgressCallback = (message: string) => {
+        progressCallback?.(message, currentStep, totalSteps);
+      };
+      
       const pdfBuffer = await this.convertToPdf(pngBuffer, {
         width: canvasWidth,
         height: canvasHeight,
@@ -3328,7 +3340,7 @@ export class HighResolutionExportService {
         imageTitle: exportSettings.imageTitle || 'Untitled Artwork',
         imageDescription: exportSettings.imageDescription,
         embedIccProfile: exportSettings.embedIccProfile !== false
-      });
+      }, pdfProgressCallback);
       
       // Cleanup all temp files
       cleanupTempFiles();
@@ -3751,7 +3763,9 @@ export class HighResolutionExportService {
 
   /**
    * Convert PNG buffer to PDF with embedded image and metadata
-   * Uses jsPDF to create a PDF document with the image and metadata
+   * Uses jsPDF in a Worker Thread to avoid blocking the main event loop.
+   * This is critical for large images (300+ megapixels) where PDF generation
+   * can take 60+ seconds. Running in a worker allows SSE heartbeats to continue.
    */
   private async convertToPdf(pngBuffer: Buffer, options: {
     width: number;
@@ -3762,48 +3776,72 @@ export class HighResolutionExportService {
     imageTitle?: string;
     imageDescription?: string;
     embedIccProfile?: boolean;
-  }): Promise<Buffer> {
+  }, progressCallback?: (message: string) => void): Promise<Buffer> {
+    const { Worker } = await import('worker_threads');
+    const path = await import('path');
+    
     const { width, height, dpi, artistName, copyrightText, imageTitle, imageDescription } = options;
     
-    // Calculate page dimensions in mm (PDF uses mm by default)
-    // Convert from pixels at the given DPI
     const widthMm = (width / dpi) * 25.4;
     const heightMm = (height / dpi) * 25.4;
-    
-    // Determine orientation
     const orientation = widthMm > heightMm ? 'landscape' : 'portrait';
     
-    // Create PDF with custom page size
-    const pdf = new jsPDF({
-      orientation,
-      unit: 'mm',
-      format: [widthMm, heightMm]
-    });
+    progressCallback?.('Encoding image for PDF...');
+    console.log('[HighResExport] PDF: Encoding image to base64...');
     
-    // Set PDF metadata/properties
-    pdf.setProperties({
-      title: imageTitle || 'Shape Editor Export',
-      author: artistName || 'Shape Editor',
-      creator: 'Shape Editor - Replit',
-      subject: imageDescription || 'Generated artwork',
-      keywords: copyrightText ? `Copyright: ${copyrightText}` : undefined
-    });
-    
-    // Convert PNG buffer to base64 data URL for embedding
     const pngBase64 = pngBuffer.toString('base64');
-    const pngDataUrl = `data:image/png;base64,${pngBase64}`;
+    console.log(`[HighResExport] PDF: Base64 encoded (${(pngBase64.length / 1024 / 1024).toFixed(1)} MB)`);
     
-    // Add the PNG image to fill the entire page
-    // Image position is at (0, 0) and fills the page dimensions
-    pdf.addImage(pngDataUrl, 'PNG', 0, 0, widthMm, heightMm, undefined, 'FAST');
+    progressCallback?.('Generating PDF in worker thread...');
+    console.log('[HighResExport] PDF: Starting worker thread for PDF generation...');
     
-    // Get PDF as ArrayBuffer and convert to Buffer
-    const pdfArrayBuffer = pdf.output('arraybuffer');
-    const pdfBuffer = Buffer.from(pdfArrayBuffer);
-    
-    console.log(`[HighResExport] Created PDF: ${widthMm.toFixed(1)}mm x ${heightMm.toFixed(1)}mm at ${dpi} DPI`);
-    
-    return pdfBuffer;
+    return new Promise((resolve, reject) => {
+      const workerPath = path.join(__dirname, 'pdfWorker.ts');
+      
+      const worker = new Worker(workerPath, {
+        workerData: {
+          pngBase64,
+          width,
+          height,
+          dpi,
+          widthMm,
+          heightMm,
+          orientation,
+          artistName,
+          copyrightText,
+          imageTitle,
+          imageDescription
+        },
+        execArgv: ['--require', 'tsx']
+      });
+      
+      const heartbeatInterval = setInterval(() => {
+        progressCallback?.('PDF generation in progress...');
+      }, 5000);
+      
+      worker.on('message', (result: { success: boolean; buffer?: Buffer; error?: string }) => {
+        clearInterval(heartbeatInterval);
+        if (result.success && result.buffer) {
+          console.log(`[HighResExport] Created PDF: ${widthMm.toFixed(1)}mm x ${heightMm.toFixed(1)}mm at ${dpi} DPI`);
+          resolve(result.buffer);
+        } else {
+          reject(new Error(result.error || 'PDF generation failed'));
+        }
+      });
+      
+      worker.on('error', (error) => {
+        clearInterval(heartbeatInterval);
+        console.error('[HighResExport] PDF worker error:', error);
+        reject(error);
+      });
+      
+      worker.on('exit', (code) => {
+        clearInterval(heartbeatInterval);
+        if (code !== 0) {
+          reject(new Error(`PDF worker exited with code ${code}`));
+        }
+      });
+    });
   }
 
   private async convertToTiff(pngBuffer: Buffer, options: { 
