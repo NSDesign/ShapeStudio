@@ -27,6 +27,8 @@ This document outlines complex features that have been identified for future dev
 | **Server-Side High-Resolution Export** | ✅ Complete | [Section 9](#9-server-side-high-resolution-export) |
 | **SSE Streaming for Export Progress** | ✅ Implemented | [Section 9.1](#91-sse-streaming-for-real-time-tile-progress-updates--implemented) |
 | **Shape Selection Groups** | 📋 Planned | [Section 10](#10-shape-selection-groups-future-abstraction) |
+| **Export Metadata Audit & Settings Sync** | 📋 Planned | [Section 11](#11-export-metadata-embedding-audit--settings-sync--planned) |
+| **Export & Save Contextual UI** | 📋 Planned | [Section 12](#12-export--save-section-contextual-ui--planned) |
 
 ### Status Legend
 - ✅ **Implemented**: Feature is fully functional in the codebase
@@ -3442,8 +3444,170 @@ Shape Selection Groups is planned for implementation **after** Echo/Motion Trail
 
 ---
 
+## 11. Export Metadata Embedding Audit & Settings Sync 📋 PLANNED
+
+### Overview
+This section documents the current state of metadata embedding in exported images and outlines a plan for synchronizing export settings between User Settings and the Sidebar export section.
+
+### Current Metadata Embedding Status (Audit: December 2025)
+
+#### Server-Side Exports
+
+| Format | DPI | ICC Profile | Artist/Copyright/Title | Bit Depth | Notes |
+|--------|-----|-------------|----------------------|-----------|-------|
+| **TIFF** | ✅ | ✅ sRGB | ✅ EXIF tags | ✅ 8/16-bit | Full metadata support |
+| **PNG** | ✅ | ✅ sRGB | ✅ EXIF tags | 8-bit only* | *16-bit possible but not wired up |
+| **JPEG** | ✅ | ✅ sRGB | ✅ EXIF tags | N/A (lossy) | Quality setting supported |
+| **WebP** | ❌ | ✅ sRGB only | ❌ EXIF stripped | N/A | Limited metadata support |
+| **PDF** | ✅ | ❌ | ✅ PDF properties | N/A | Uses jsPDF document properties |
+
+#### Client-Side (Browser) Exports
+
+| Format | DPI | ICC Profile | Artist/Copyright/Title | Notes |
+|--------|-----|-------------|----------------------|-------|
+| **TIFF** | ✅ | ✅ | ❌ No EXIF | UTIF library doesn't support EXIF |
+| **PNG** | ✅ | ✅ | ❌ No EXIF | Only ICC embedding supported |
+| **JPEG** | ✅ | ✅ | ❌ No EXIF | Only ICC embedding supported |
+
+#### Key Findings
+
+1. **Server exports embed full metadata** - TIFF/PNG/JPEG support artist, copyright, title via EXIF
+2. **Client exports only embed ICC profiles** - No EXIF metadata capability in browser
+3. **WebP has limited support** - Only ICC profile, no EXIF due to format limitations
+4. **PDF uses document properties** - Title, author, creator, subject, keywords
+
+### Proposed: Settings Synchronization
+
+#### Current Problem
+- **User Settings → Export section** has POD (Print-on-Demand) settings
+- **Sidebar → Export & Save section** has TIFF-specific options
+- These are independent and don't sync with each other
+
+#### Proposed Solution
+
+1. **Rename "TIFF Bit Depth" to "Bit Depth"** - It's format-agnostic (applies to PNG 16-bit, etc.)
+
+2. **Bidirectional Sync**
+   - Changes in User Settings → Export should update Sidebar values
+   - Changes in Sidebar should update User Settings defaults
+   
+3. **Hierarchical Override System** (Future)
+   ```
+   Document Level → Artboard Level (overrides) → Export Session (overrides)
+   ```
+   - Document: Default bit depth, ICC profile, metadata
+   - Artboard: Can override document defaults
+   - Export: One-time override for current export only
+
+4. **User Settings Export Section Rework**
+   - Add file type dropdown (TIFF, PNG, JPEG, etc.)
+   - Show type-specific settings when selected
+   - Keep type-agnostic metadata (artist, copyright) always visible
+
+5. **Toggle Controls in Export Section**
+   - ICC Profile: Enable/disable inclusion in exported image
+   - Metadata: Enable/disable EXIF embedding
+   - Always included in project JSON regardless of toggle state
+
+### Implementation Priority
+
+| Task | Priority | Complexity |
+|------|----------|------------|
+| Rename TIFF Bit Depth → Bit Depth | High | Low |
+| Bidirectional settings sync | Medium | Medium |
+| User Settings file type dropdown | Medium | Medium |
+| Hierarchical override system | Low | High |
+
+---
+
+## 12. Export & Save Section Contextual UI 📋 PLANNED
+
+### Overview
+Clean up the Export & Save sidebar section to show/hide options based on the selected format, document dimensions, and resolution. This reduces cognitive load by only displaying relevant options.
+
+### Current Issues
+
+1. **Irrelevant options visible** - "Export Project Files" and "Package as ZIP" shown for server exports (they only apply to browser exports)
+2. **Browser/Auto options for large files** - When dimensions require server processing, browser/auto options are redundant
+3. **"Export all images" when count=1** - Unnecessary option when only one image is being generated
+4. **Format-specific vs universal options** - Not clear which settings apply to which formats
+
+### Proposed Logic
+
+#### Format Detection
+```
+Web Formats (browser-capable): PNG, JPEG, WebP, AVIF at reasonable sizes
+Print Formats (server-required): TIFF, PDF, or any format at high resolution
+```
+
+#### Dimension/Resolution Thresholds
+```javascript
+// Megapixels calculation
+const megapixels = (width * height * scale * scale * (dpi/72)^2) / 1_000_000;
+
+// Server required if:
+// - Format is TIFF or PDF
+// - megapixels > 100 (browser memory limit)
+// - 16-bit depth requested
+```
+
+#### UI Behavior
+
+| Condition | Render Mode Selector | Browser Export Options | Server Options |
+|-----------|---------------------|----------------------|----------------|
+| Small web format | Show all (Browser/Auto/Server) | Show all | Show 7z compression |
+| Large print format | Auto-select Server, grey out others | Hide | Show 7z compression |
+| TIFF/PDF any size | Auto-select Server, grey out others | Hide | Show 7z compression |
+
+#### Option Visibility Rules
+
+1. **"Export Project Files" + "Package as ZIP"**
+   - Show: Only for browser-processed exports
+   - Hide: For server-processed exports (has separate 7z option)
+
+2. **"Number of Exports" / Batch Count**
+   - Show: Always (applies to both paths)
+
+3. **Render Mode Selector (Browser/Auto/Server)**
+   - Full selector: When browser is viable option
+   - Server-only badge: When server is required (hide other options entirely)
+
+4. **Format-Specific Options**
+   - TIFF: Bit depth, compression, flatten-to-RGB, matte color
+   - JPEG/WebP/AVIF: Quality slider
+   - PDF: Metadata info panel
+   - PNG: (minimal - just compression level if added)
+
+### Alternative Approach: Server Badge
+
+Instead of greying out Browser/Auto options, display "Server" as a non-interactive badge/label when server processing is required. This provides a cleaner UI without confusing disabled options.
+
+**Pros:**
+- Cleaner appearance
+- No "why can't I click this?" confusion
+
+**Cons:**
+- User doesn't see that other options exist
+- Might be confusing if they've previously seen the full selector
+
+### Implementation Phases
+
+1. **Phase 1: Basic Show/Hide**
+   - Hide browser export options when server is required
+   - Auto-select server render mode for large/print formats
+
+2. **Phase 2: Format-Specific Blocks**
+   - Organize options into collapsible format-specific sections
+   - Only show section for currently selected format
+
+3. **Phase 3: Smart Defaults**
+   - Auto-detect optimal settings based on artboard size and DPI
+   - Suggest server export when approaching browser limits
+
+---
+
 ## Notes
 
 This document will be updated as requirements evolve and technical constraints are identified. Implementation details may change based on user feedback and architectural decisions.
 
-Last updated: December 6, 2025
+Last updated: December 12, 2025

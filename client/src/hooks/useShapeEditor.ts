@@ -231,6 +231,10 @@ export const useShapeEditor = () => {
           ((set.batchConfig as any).yPositionModulationEnabled && (set.batchConfig as any).yPositionModulationValue > 0 
             ? 'pixel-value' 
             : 'off'),
+        // Ensure shape property flags default to true for dimension/position control
+        // Fix for fit-to-bleed: old saved sets may not have these flags, causing shapes to use random dimensions
+        shapePropertiesDimensionsEnabled: set.batchConfig.shapePropertiesDimensionsEnabled ?? true,
+        shapePropertiesPositionEnabled: set.batchConfig.shapePropertiesPositionEnabled ?? true,
       } : set.batchConfig;
 
       return {
