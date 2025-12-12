@@ -1,4 +1,3 @@
-import { parentPort, workerData } from 'worker_threads';
 import { jsPDF } from 'jspdf';
 
 interface PdfWorkerData {
@@ -40,14 +39,14 @@ function generatePdf(data: PdfWorkerData): Buffer {
   return Buffer.from(pdfArrayBuffer);
 }
 
-if (parentPort) {
+process.on('message', (data: PdfWorkerData) => {
   try {
-    const pdfBuffer = generatePdf(workerData as PdfWorkerData);
-    parentPort.postMessage({ success: true, buffer: pdfBuffer });
+    const pdfBuffer = generatePdf(data);
+    process.send!({ success: true, buffer: pdfBuffer.toString('base64') });
   } catch (error) {
-    parentPort.postMessage({ 
+    process.send!({ 
       success: false, 
       error: error instanceof Error ? error.message : 'PDF generation failed' 
     });
   }
-}
+});
