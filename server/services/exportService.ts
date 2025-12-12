@@ -3837,11 +3837,17 @@ export class HighResolutionExportService {
         progressCallback?.('PDF generation in progress...');
       }, 5000);
       
-      worker.on('message', (result: { success: boolean; buffer?: Buffer; error?: string }) => {
+      worker.on('message', (result: { success: boolean; buffer?: Buffer | Uint8Array; error?: string }) => {
         clearInterval(heartbeatInterval);
         if (result.success && result.buffer) {
+          // Worker threads structured clone converts Buffer to Uint8Array
+          // We must convert it back to a proper Buffer
+          const pdfBuffer = Buffer.isBuffer(result.buffer) 
+            ? result.buffer 
+            : Buffer.from(result.buffer);
           console.log(`[HighResExport] Created PDF: ${widthMm.toFixed(1)}mm x ${heightMm.toFixed(1)}mm at ${dpi} DPI`);
-          resolve(result.buffer);
+          console.log(`[HighResExport] PDF buffer type: ${result.buffer.constructor.name}, size: ${pdfBuffer.length} bytes`);
+          resolve(pdfBuffer);
         } else {
           reject(new Error(result.error || 'PDF generation failed'));
         }
