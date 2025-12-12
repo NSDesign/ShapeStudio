@@ -3763,9 +3763,11 @@ export class HighResolutionExportService {
 
   /**
    * Convert PNG buffer to PDF with embedded image and metadata
-   * Uses jsPDF in a child process to avoid blocking the main event loop.
+   * Uses jsPDF in a Worker Thread to avoid blocking the main event loop.
    * This is critical for large images (300+ megapixels) where PDF generation
-   * can take 60+ seconds. Running in a separate process allows SSE heartbeats to continue.
+   * can take 60+ seconds. Running in a separate thread allows SSE heartbeats to continue.
+   * 
+   * The worker is compiled from TypeScript to JavaScript at runtime using esbuild.
    */
   private async convertToPdf(pngBuffer: Buffer, options: {
     width: number;
@@ -3777,8 +3779,10 @@ export class HighResolutionExportService {
     imageDescription?: string;
     embedIccProfile?: boolean;
   }, progressCallback?: (message: string) => void): Promise<Buffer> {
-    const { spawn } = await import('child_process');
+    const { Worker } = await import('worker_threads');
     const pathModule = await import('path');
+    const esbuild = await import('esbuild');
+    const fsModule = await import('fs');
     
     const { width, height, dpi, artistName, copyrightText, imageTitle, imageDescription } = options;
     
@@ -3792,65 +3796,68 @@ export class HighResolutionExportService {
     const pngBase64 = pngBuffer.toString('base64');
     console.log(`[HighResExport] PDF: Base64 encoded (${(pngBase64.length / 1024 / 1024).toFixed(1)} MB)`);
     
-    progressCallback?.('Generating PDF in child process...');
-    console.log('[HighResExport] PDF: Starting child process for PDF generation...');
+    progressCallback?.('Compiling PDF worker...');
+    console.log('[HighResExport] PDF: Compiling TypeScript worker to JavaScript...');
     
-    const workerPath = pathModule.join(process.cwd(), 'server', 'services', 'pdfWorker.ts');
+    const workerTsPath = pathModule.join(process.cwd(), 'server', 'services', 'pdfWorker.ts');
+    const workerJsPath = '/tmp/pdfWorker.js';
     
-    console.log(`[HighResExport] PDF: Worker path: ${workerPath}`);
+    await esbuild.build({
+      entryPoints: [workerTsPath],
+      outfile: workerJsPath,
+      bundle: true,
+      platform: 'node',
+      format: 'cjs',
+      logLevel: 'silent'
+    });
+    
+    console.log(`[HighResExport] PDF: Worker compiled to ${workerJsPath}`);
+    
+    progressCallback?.('Generating PDF in worker thread...');
+    console.log('[HighResExport] PDF: Starting worker thread for PDF generation...');
     
     return new Promise((resolve, reject) => {
-      const child = spawn('npx', ['tsx', workerPath], {
-        stdio: ['pipe', 'pipe', 'pipe', 'ipc']
+      const worker = new Worker(workerJsPath, {
+        workerData: {
+          pngBase64,
+          width,
+          height,
+          dpi,
+          widthMm,
+          heightMm,
+          orientation,
+          artistName,
+          copyrightText,
+          imageTitle,
+          imageDescription
+        }
       });
       
       const heartbeatInterval = setInterval(() => {
         progressCallback?.('PDF generation in progress...');
       }, 5000);
       
-      let stderr = '';
-      child.stderr?.on('data', (data) => {
-        stderr += data.toString();
-      });
-      
-      child.on('message', (result: { success: boolean; buffer?: string; error?: string }) => {
+      worker.on('message', (result: { success: boolean; buffer?: Buffer; error?: string }) => {
         clearInterval(heartbeatInterval);
-        child.kill();
         if (result.success && result.buffer) {
-          const pdfBuffer = Buffer.from(result.buffer, 'base64');
           console.log(`[HighResExport] Created PDF: ${widthMm.toFixed(1)}mm x ${heightMm.toFixed(1)}mm at ${dpi} DPI`);
-          resolve(pdfBuffer);
+          resolve(result.buffer);
         } else {
           reject(new Error(result.error || 'PDF generation failed'));
         }
       });
       
-      child.on('error', (error) => {
+      worker.on('error', (error) => {
         clearInterval(heartbeatInterval);
-        console.error('[HighResExport] PDF child process error:', error);
+        console.error('[HighResExport] PDF worker error:', error);
         reject(error);
       });
       
-      child.on('exit', (code) => {
+      worker.on('exit', (code) => {
         clearInterval(heartbeatInterval);
-        if (code !== 0 && code !== null) {
-          console.error('[HighResExport] PDF child stderr:', stderr);
-          reject(new Error(`PDF child process exited with code ${code}: ${stderr}`));
+        if (code !== 0) {
+          reject(new Error(`PDF worker exited with code ${code}`));
         }
-      });
-      
-      child.send({
-        pngBase64,
-        width,
-        height,
-        dpi,
-        widthMm,
-        heightMm,
-        orientation,
-        artistName,
-        copyrightText,
-        imageTitle,
-        imageDescription
       });
     });
   }
