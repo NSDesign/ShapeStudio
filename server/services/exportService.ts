@@ -3778,7 +3778,7 @@ export class HighResolutionExportService {
     embedIccProfile?: boolean;
   }, progressCallback?: (message: string) => void): Promise<Buffer> {
     const { Worker } = await import('worker_threads');
-    const path = await import('path');
+    const pathModule = await import('path');
     
     const { width, height, dpi, artistName, copyrightText, imageTitle, imageDescription } = options;
     
@@ -3795,9 +3795,11 @@ export class HighResolutionExportService {
     progressCallback?.('Generating PDF in worker thread...');
     console.log('[HighResExport] PDF: Starting worker thread for PDF generation...');
     
+    const workerPath = pathModule.join(process.cwd(), 'server', 'services', 'pdfWorker.ts');
+    
+    console.log(`[HighResExport] PDF: Worker path: ${workerPath}`);
+    
     return new Promise((resolve, reject) => {
-      const workerPath = path.join(__dirname, 'pdfWorker.ts');
-      
       const worker = new Worker(workerPath, {
         workerData: {
           pngBase64,
@@ -3812,7 +3814,7 @@ export class HighResolutionExportService {
           imageTitle,
           imageDescription
         },
-        execArgv: ['--require', 'tsx']
+        execArgv: ['--import', 'tsx']
       });
       
       const heartbeatInterval = setInterval(() => {
