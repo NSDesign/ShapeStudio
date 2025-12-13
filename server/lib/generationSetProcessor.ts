@@ -290,8 +290,8 @@ function applyArtboardAlignment(
       const overlayUnit = artboard.printConfig.overlays.overlayUnit || 'pixels';
       const dpi = artboard.dpi || 300;
       
-      // Apply bleed if either display OR render is enabled
-      if ((bleedConfig.display || bleedConfig.render) && bleedConfig.amount && bleedConfig.amount > 0) {
+      // Apply bleed based on amount > 0 (display/render are visualization settings, not the actual bleed value)
+      if (bleedConfig.amount && bleedConfig.amount > 0) {
         bleedPx = convertPrintUnitToPixels(bleedConfig.amount, overlayUnit as PrintUnitType, dpi);
         console.log(`📐 [SERVER BLEED] Expanding target by bleed: ${bleedConfig.amount}${overlayUnit} = ${bleedPx.toFixed(1)}px`);
       }
