@@ -3597,10 +3597,10 @@ export const useShapeEditor = () => {
           const overlayUnit = currentArtboard.printConfig.overlays.overlayUnit || 'pixels';
           const dpi = currentArtboard.dpi || 300;
           
-          // Only apply bleed if render is enabled
-          if (bleedConfig.render && bleedConfig.amount > 0) {
+          // Apply bleed if either display OR render is enabled (user may want visual reference only)
+          if ((bleedConfig.display || bleedConfig.render) && bleedConfig.amount > 0) {
             bleedPx = convertPrintUnitToPixels(bleedConfig.amount, overlayUnit as PrintUnitType, dpi);
-            console.log(`📐 [BLEED] Expanding target by bleed: ${bleedConfig.amount}${overlayUnit} = ${bleedPx.toFixed(1)}px`);
+            console.log(`📐 [BLEED] Expanding target by bleed: ${bleedConfig.amount}${overlayUnit} = ${bleedPx.toFixed(1)}px (display=${bleedConfig.display}, render=${bleedConfig.render})`);
           }
         }
         

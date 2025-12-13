@@ -17,15 +17,27 @@ import { Shape } from './shapeGenerator';
 import { generateShapesWithBatchConfig } from './batchConfigProcessor';
 import { renderShape } from './canvasRenderer';
 import { createCanvas, Canvas, CanvasRenderingContext2D } from 'canvas';
-import type { GenerationSet, SetTransform, ArtboardAlignment, SetVisibility } from '../../shared/schema';
+import type { GenerationSet, SetTransform, ArtboardAlignment, SetVisibility, FitTarget, PrintUnitType } from '../../shared/schema';
 import type { ShapeType, DistributionSettings } from '../../client/src/lib/shapeTypes';
+import { convertPrintUnitToPixels } from '../../client/src/lib/imageExport';
 
 interface ArtboardSettings {
   x: number;
   y: number;
   width: number;
   height: number;
+  dpi?: number;
   backgroundColor?: string;
+  printConfig?: {
+    overlays?: {
+      bleed?: {
+        display?: boolean;
+        render?: boolean;
+        amount?: number;
+      };
+      overlayUnit?: string;
+    };
+  };
 }
 
 interface ExportSettings {
@@ -263,9 +275,27 @@ function applyArtboardAlignment(
 ): void {
   if (!alignment || shapes.length === 0) return;
 
-  if (alignment.fitToArtboard) {
+  // Determine fit target: use new fitTarget field if set, fall back to legacy fitToArtboard boolean
+  const fitTarget: FitTarget = (alignment as any).fitTarget || 
+    (alignment.fitToArtboard ? 'artboard' : 'none');
+
+  if (fitTarget === 'artboard' || fitTarget === 'bleed') {
     const fitMode = alignment.fitMode || 'contain';
-    console.log(`📐 [SERVER] Applying fitToArtboard for set "${setName}" (mode: ${fitMode})`);
+    console.log(`📐 [SERVER] Applying fit to ${fitTarget} for set "${setName}" (mode: ${fitMode})`);
+    
+    // Calculate bleed expansion if fitting to bleed
+    let bleedPx = 0;
+    if (fitTarget === 'bleed' && artboard.printConfig?.overlays?.bleed) {
+      const bleedConfig = artboard.printConfig.overlays.bleed;
+      const overlayUnit = artboard.printConfig.overlays.overlayUnit || 'pixels';
+      const dpi = artboard.dpi || 300;
+      
+      // Apply bleed if either display OR render is enabled
+      if ((bleedConfig.display || bleedConfig.render) && bleedConfig.amount && bleedConfig.amount > 0) {
+        bleedPx = convertPrintUnitToPixels(bleedConfig.amount, overlayUnit as PrintUnitType, dpi);
+        console.log(`📐 [SERVER BLEED] Expanding target by bleed: ${bleedConfig.amount}${overlayUnit} = ${bleedPx.toFixed(1)}px`);
+      }
+    }
     
     // Calculate bounding box of all shapes in this set using world bounds
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
@@ -280,7 +310,7 @@ function applyArtboardAlignment(
       minX = Math.min(minX, x - halfWidth);
       minY = Math.min(minY, y - halfHeight);
       maxX = Math.max(maxX, x + halfWidth);
-      maxY = Math.max(maxY, y + halfHeight);
+      maxY = Math.max(maxX, y + halfHeight);
     });
     
     const setBoundsWidth = maxX - minX;
@@ -295,9 +325,15 @@ function applyArtboardAlignment(
     const marginLeft = typeof margin === 'number' ? margin : margin.left;
     const marginRight = typeof margin === 'number' ? margin : margin.right;
     
-    // Calculate scale to fit within artboard with margin
-    const availableWidth = artboard.width - marginLeft - marginRight;
-    const availableHeight = artboard.height - marginTop - marginBottom;
+    // Calculate target area dimensions (artboard + bleed if applicable)
+    const targetX = artboard.x - bleedPx;
+    const targetY = artboard.y - bleedPx;
+    const targetWidth = artboard.width + (bleedPx * 2);
+    const targetHeight = artboard.height + (bleedPx * 2);
+    
+    // Calculate scale to fit within target area with margin
+    const availableWidth = targetWidth - marginLeft - marginRight;
+    const availableHeight = targetHeight - marginTop - marginBottom;
     
     const scaleX = availableWidth / setBoundsWidth;
     const scaleY = availableHeight / setBoundsHeight;
@@ -306,19 +342,19 @@ function applyArtboardAlignment(
     const finalScaleX = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleX;
     const finalScaleY = fitMode === 'contain' ? Math.min(scaleX, scaleY) : scaleY;
     
-    // Apply scale and center to artboard
+    // Apply scale and center to target area
     shapes.forEach(shape => {
       // Scale relative to set center
       const relX = shape.transform.x - setCenterX;
       const relY = shape.transform.y - setCenterY;
       
-      shape.transform.x = artboard.x + marginLeft + availableWidth / 2 + (relX * finalScaleX);
-      shape.transform.y = artboard.y + marginTop + availableHeight / 2 + (relY * finalScaleY);
+      shape.transform.x = targetX + marginLeft + availableWidth / 2 + (relX * finalScaleX);
+      shape.transform.y = targetY + marginTop + availableHeight / 2 + (relY * finalScaleY);
       shape.transform.scaleX *= finalScaleX;
       shape.transform.scaleY *= finalScaleY;
     });
     
-    console.log(`✅ [SERVER] Fitted set to artboard with scaleX=${finalScaleX.toFixed(2)}, scaleY=${finalScaleY.toFixed(2)}`);
+    console.log(`✅ [SERVER] Fitted set to ${fitTarget} with scaleX=${finalScaleX.toFixed(2)}, scaleY=${finalScaleY.toFixed(2)}${bleedPx > 0 ? `, bleedPx=${bleedPx.toFixed(1)}` : ''}`);
   } else if (alignment.alignTo !== 'none') {
     console.log(`🎯 [SERVER] Applying alignment for set "${setName}": ${alignment.alignmentType}`);
     
