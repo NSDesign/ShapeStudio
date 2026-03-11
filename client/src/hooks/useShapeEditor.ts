@@ -3752,7 +3752,7 @@ export const useShapeEditor = () => {
     console.log(`✅ Created ${finalShapes.length} shapes, returning for further processing`);
 
     return finalShapes;
-  }, [enabledShapeTypes, scatterSettings, canvasSettings, generationConfigSettings]);
+  }, [enabledShapeTypes, scatterSettings, canvasSettings, generationConfigSettings, artboards, activeArtboard]);
 
   // Helper function to calculate repetition count for a set
   const calculateRepetitionCount = useCallback((

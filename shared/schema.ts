@@ -2739,6 +2739,8 @@ export const SetTransformSchema = z.object({
 
 export const ArtboardAlignmentSchema = z.object({
   fitToArtboard: z.boolean(),
+  fitTarget: z.enum(['none', 'artboard', 'bleed']).optional(),
+  fitMode: z.enum(['contain', 'fill']).optional(),
   alignTo: z.enum(['artboard', 'set', 'none']),
   alignmentType: z.enum([
     'center', 'top-left', 'top-center', 'top-right',
@@ -2746,7 +2748,15 @@ export const ArtboardAlignmentSchema = z.object({
     'bottom-center', 'bottom-right'
   ]),
   targetSetId: z.string().optional(),
-  margin: z.number().min(0)
+  margin: z.union([
+    z.number().min(0),
+    z.object({
+      top: z.number().min(0),
+      bottom: z.number().min(0),
+      left: z.number().min(0),
+      right: z.number().min(0)
+    })
+  ])
 });
 
 export const SetVisibilitySchema = z.object({
