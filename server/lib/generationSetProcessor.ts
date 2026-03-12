@@ -301,16 +301,16 @@ function applyArtboardAlignment(
     let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
     
     shapes.forEach(shape => {
-      // Calculate world bounds for shape
+      // Calculate world bounds for shape, accounting for transform scale
       const x = shape.transform.x;
       const y = shape.transform.y;
-      const halfWidth = (shape.width || 50) / 2;
-      const halfHeight = (shape.height || 50) / 2;
+      const halfWidth = ((shape.width || 50) * (shape.transform.scaleX || 1)) / 2;
+      const halfHeight = ((shape.height || 50) * (shape.transform.scaleY || 1)) / 2;
       
       minX = Math.min(minX, x - halfWidth);
       minY = Math.min(minY, y - halfHeight);
       maxX = Math.max(maxX, x + halfWidth);
-      maxY = Math.max(maxX, y + halfHeight);
+      maxY = Math.max(maxY, y + halfHeight);
     });
     
     const setBoundsWidth = maxX - minX;
