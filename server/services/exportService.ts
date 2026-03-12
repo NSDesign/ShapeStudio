@@ -2639,6 +2639,7 @@ export class HighResolutionExportService {
     const effectiveDpi = exportSettings.dpi || artboard.printConfig?.outputSpecs?.dpi || artboard.dpi || 300;
     
     let bleedPx = 0;
+    let safeZonePx = 0;
     let printMarksGutterPx = 0;
     
     if (artboard.printConfig) {
@@ -2647,6 +2648,10 @@ export class HighResolutionExportService {
       
       if (exportSettings.includeBleed && config.overlays?.bleed?.render && config.overlays?.bleed?.amount > 0) {
         bleedPx = convertUnitToPixels(config.overlays.bleed.amount, overlayUnit, effectiveDpi);
+      }
+      
+      if (config.overlays?.safeZone?.display && config.overlays?.safeZone?.amount > 0) {
+        safeZonePx = convertUnitToPixels(config.overlays.safeZone.amount, overlayUnit, effectiveDpi);
       }
       
       if (exportSettings.includePrintMarks && config.overlays?.printMarks?.render) {
@@ -2695,6 +2700,7 @@ export class HighResolutionExportService {
         effectiveDpi,
         bgColor,
         bleedPx,
+        safeZonePx,
         printMarksGutterPx,
         printExpansion,
         scale,
@@ -2718,6 +2724,7 @@ export class HighResolutionExportService {
         ...exportSettings,
         dpi: effectiveDpi,
         bleedPx,
+        safeZonePx,
         printMarksGutterPx,
         printExpansion,
         backgroundColor: bgColor
@@ -2893,6 +2900,7 @@ export class HighResolutionExportService {
       effectiveDpi: number;
       bgColor: string;
       bleedPx: number;
+      safeZonePx: number;
       printMarksGutterPx: number;
       printExpansion: number;
       scale: number;
@@ -2903,7 +2911,7 @@ export class HighResolutionExportService {
   ): Promise<HighResExportResult> {
     const { shapes, groups = [], artboard, exportSettings } = request;
     const { format = 'tiff', bitDepth = 16, compression = 'none' } = exportSettings;
-    const { canvasWidth, canvasHeight, effectiveDpi, bgColor, bleedPx, printMarksGutterPx, printExpansion, scale, shouldFlattenToRgb } = renderConfig;
+    const { canvasWidth, canvasHeight, effectiveDpi, bgColor, bleedPx, safeZonePx, printMarksGutterPx, printExpansion, scale, shouldFlattenToRgb } = renderConfig;
     
     // Calculate total steps for progress: 1 (prep) + tiles + 1 (stitch) + 1 (encode)
     const totalSteps = 1 + tilePlan.totalTiles + 1 + 1;
@@ -3138,10 +3146,33 @@ export class HighResolutionExportService {
     const stitchedStats = fs.statSync(currentTempFile);
     console.log(`[HighResExport] Stitched image: ${(stitchedStats.size / 1024 / 1024).toFixed(2)} MB`);
     
+    // Add bleed and safe zone overlays after stitching (these span entire canvas)
+    const totalPixels = canvasWidth * canvasHeight;
+    const OVERLAY_PIXEL_LIMIT = 250_000_000; // 250 megapixels - safe threshold for composite
+    
+    if (bleedPx > 0 && totalPixels <= OVERLAY_PIXEL_LIMIT) {
+      const bleedOverlaySvg = this.generateBleedOverlaySvg(
+        canvasWidth, canvasHeight,
+        artboard.width, artboard.height,
+        scale, bleedPx, safeZonePx, printExpansion,
+        artboard.printConfig?.overlays?.bleed?.color || '#00FFFF',
+        safeZonePx > 0 ? (artboard.printConfig?.overlays?.safeZone?.color || '#FF00FF') : null
+      );
+      if (bleedOverlaySvg) {
+        const bleedOverlayFile = path.join(tempDir, `with_bleed_${timestamp}.png`);
+        await sharp(currentTempFile, { limitInputPixels: false })
+          .composite([{ input: Buffer.from(bleedOverlaySvg), top: 0, left: 0 }])
+          .png()
+          .toFile(bleedOverlayFile);
+        tempFilesToCleanup.push(bleedOverlayFile);
+        currentTempFile = bleedOverlayFile;
+        console.log(`[HighResExport] Bleed overlay added to stitched image`);
+      }
+    }
+    
     // Add print marks overlay after stitching (print marks span entire canvas, not per-tile)
     // Note: For very large images (300M+ pixels), Sharp's composite operation exceeds internal limits
     // even with file-based I/O. Skip print marks composite for these cases.
-    const totalPixels = canvasWidth * canvasHeight;
     const PRINT_MARKS_PIXEL_LIMIT = 250_000_000; // 250 megapixels - safe threshold for composite
     
     if (exportSettings.includePrintMarks && 
@@ -4437,6 +4468,31 @@ export class HighResolutionExportService {
           renderShape(ctx, shape);
         });
         
+        // Draw bleed overlay rectangle if bleed is active
+        if (bleedPx > 0) {
+          var bleedCfg = artboard.printConfig && artboard.printConfig.overlays && artboard.printConfig.overlays.bleed;
+          var bleedColor = (bleedCfg && bleedCfg.color) || '#00FFFF';
+          ctx.save();
+          ctx.strokeStyle = bleedColor;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([]);
+          ctx.strokeRect(-bleedPx, -bleedPx, artboard.width + bleedPx * 2, artboard.height + bleedPx * 2);
+          ctx.restore();
+        }
+        
+        // Draw safe zone overlay rectangle if configured
+        var safeZonePx = exportSettings.safeZonePx || 0;
+        if (safeZonePx > 0) {
+          var szCfg = artboard.printConfig && artboard.printConfig.overlays && artboard.printConfig.overlays.safeZone;
+          var safeZoneColor = (szCfg && szCfg.color) || '#FF00FF';
+          ctx.save();
+          ctx.strokeStyle = safeZoneColor;
+          ctx.lineWidth = 2;
+          ctx.setLineDash([]);
+          ctx.strokeRect(safeZonePx, safeZonePx, artboard.width - safeZonePx * 2, artboard.height - safeZonePx * 2);
+          ctx.restore();
+        }
+        
         if (artboard.printConfig && artboard.printConfig.overlays && artboard.printConfig.overlays.printMarks && artboard.printConfig.overlays.printMarks.render && exportSettings.includePrintMarks !== false) {
           const config = artboard.printConfig.overlays.printMarks;
           renderPrintMarks(ctx, 0, 0, artboard.width, artboard.height, bleedPx, {
@@ -4674,6 +4730,52 @@ export class HighResolutionExportService {
     }
     
     svgContent += '</g></svg>';
+    return svgContent;
+  }
+
+  private generateBleedOverlaySvg(
+    canvasWidth: number,
+    canvasHeight: number,
+    artboardWidth: number,
+    artboardHeight: number,
+    scale: number,
+    bleedPx: number,
+    safeZonePx: number,
+    printExpansion: number,
+    bleedColor: string,
+    safeZoneColor: string | null
+  ): string {
+    const scaledPrintExpansion = printExpansion * scale;
+    const scaledBleedPx = bleedPx * scale;
+    const scaledSafeZonePx = safeZonePx * scale;
+    const scaledArtboardWidth = artboardWidth * scale;
+    const scaledArtboardHeight = artboardHeight * scale;
+
+    // Artboard top-left in canvas coordinates
+    const artboardX = scaledPrintExpansion;
+    const artboardY = scaledPrintExpansion;
+
+    // Bleed rect: expands outward from artboard by bleedPx
+    const bleedRectX = artboardX - scaledBleedPx;
+    const bleedRectY = artboardY - scaledBleedPx;
+    const bleedRectW = scaledArtboardWidth + scaledBleedPx * 2;
+    const bleedRectH = scaledArtboardHeight + scaledBleedPx * 2;
+
+    let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${canvasWidth}" height="${canvasHeight}">`;
+
+    // Bleed rectangle
+    svgContent += `<rect x="${bleedRectX}" y="${bleedRectY}" width="${bleedRectW}" height="${bleedRectH}" fill="none" stroke="${bleedColor}" stroke-width="2"/>`;
+
+    // Safe zone rectangle (inside artboard)
+    if (safeZoneColor && scaledSafeZonePx > 0) {
+      const szX = artboardX + scaledSafeZonePx;
+      const szY = artboardY + scaledSafeZonePx;
+      const szW = scaledArtboardWidth - scaledSafeZonePx * 2;
+      const szH = scaledArtboardHeight - scaledSafeZonePx * 2;
+      svgContent += `<rect x="${szX}" y="${szY}" width="${szW}" height="${szH}" fill="none" stroke="${safeZoneColor}" stroke-width="2"/>`;
+    }
+
+    svgContent += '</svg>';
     return svgContent;
   }
 }
